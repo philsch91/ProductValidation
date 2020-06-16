@@ -3,7 +3,8 @@ import logo from './logo.svg';
 import { Route, NavLink, HashRouter } from "react-router-dom";
 import Web3 from 'web3';
 import { Contract, ContractOptions, ContractSendMethod, SendOptions, DeployOptions } from 'web3-eth-contract';
-import * as fs from 'fs';
+import { AbiItem } from 'web3-utils';
+//import * as fs from 'fs';
 import * as path from 'path';
 
 import { NewTransactionForm } from './components/NewTransactionForm';
@@ -25,7 +26,8 @@ import { Web3Manager } from './Web3Manager';
 import { Web3NodeManager } from './helpers/Web3NodeManager';
 import { AccountDelegate } from './interfaces/AccountDelegate';
 
-import * as dealContract from './static/DealContract.json'
+import * as dealContract from './static/DealContract.json';
+import deal from './static/DealContract.json';
 
 import './App.css';
 
@@ -284,11 +286,36 @@ class App extends React.Component<{}, State, AccountDelegate> {
 
     var product = this.state.newProduct;
 
+    /**
+     * It is not possible to use node.js 'fs' in the browser 
+     * and have it directly affect the file system on the server. 
+     * https://stackoverflow.com/questions/29762282/using-node-jss-file-system-functions-from-a-browser
+     */
+
     //const abiPath = path.resolve(__dirname, "contracts", "Deal_sol_Deal.abi");
     //const abiPath = path.join("./", "contracts", "Deal_sol_Deal.abi");
     //console.log(abiPath);
     //const str = fs.readFileSync(path.join(__dirname, "filename.txt"), "utf-8");
     //const contractAbi = fs.readFileSync(abiPath, "utf-8");
+    
+    /*
+    const fs = require('fs');
+
+    let file = './static/DealContract.json';
+    let fileStats = false;
+    
+    try {
+      let fileStats = fs.statSync(file);
+    } catch (error) {
+      console.log(error.message);
+      return false;
+    }
+
+    let dealContractJson = fs.readFileSync(file, 'utf8');
+    let contract = JSON.parse(dealContractJson);
+    */
+
+    //print static import
     console.log(dealContract);
 
     const web3Manager = Web3NodeManager.getInstance();
@@ -296,7 +323,13 @@ class App extends React.Component<{}, State, AccountDelegate> {
       console.log("unlocked: " + status);
     });
 
-    var contract = new web3Manager.eth.Contract(dealContract.abi);
+    //workaround for compile time warning
+    let json = JSON.stringify(dealContract.abi);
+    let abi = JSON.parse(json);
+
+    //var contract = new web3Manager.eth.Contract(dealContract.abi);
+    //var contract = new web3Manager.eth.Contract(deal.abi);
+    var contract = new web3Manager.eth.Contract(abi);
     //var contract = new Contract(dealContract.abi);  //no connection
     let byteCode = dealContract.bin
 
@@ -306,6 +339,8 @@ class App extends React.Component<{}, State, AccountDelegate> {
     } as DeployOptions
 
     console.log(code.arguments)
+
+    //TODO: combine ContractSendMethod.estimateGas() and .send() in web3Manager.send(gasPrice?: string)
     
     var sendMethod: ContractSendMethod = contract.deploy(code);
 

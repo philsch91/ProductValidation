@@ -1,10 +1,12 @@
-pragma solidity >=0.5.0  <0.6.0;
+pragma solidity >=0.6.1;
+//pragma solidity >=0.5.0  <0.6.0;
 //pragma experimental ABIEncoderV2;
 
 contract Product {
-    address owner;
+    address public owner;
     uint256 startTime;
     uint256 productId;
+
     event ReturnValue(address productOwnerAddress, string productOwnerName, string productName, uint creationDate);
 
     struct ProductInformation{
@@ -30,7 +32,7 @@ contract Product {
     }
 
     function addProduct(string memory _productOwnerName, string memory _productName) onlyWhileOpen public{
-        Product.ProductInformation storage productInfo = productInfos[productId +1];
+        Product.ProductInformation storage productInfo = productInfos[productId + 1];
 
 
         productInfo.productOwnerAddress = msg.sender;
@@ -39,18 +41,20 @@ contract Product {
         productInfo.creationDate = block.timestamp;
 
 
-        productInfoList.push(productId +1);
-        productId = productId +1;
-
+        productInfoList.push(productId + 1);
+        productId = productId + 1;
     }
 
 
-    function getAllProductIds() view public returns(uint256[] memory){
+    function getAllProductIds() public view returns(uint256[] memory){
         return productInfoList;
     }
 
-    function getProductFromProductId(uint256  _productId) view public returns(address , string memory, string memory, uint ){
-        return (productInfos[_productId].productOwnerAddress, productInfos[_productId].productOwnerName, productInfos[_productId].productName, productInfos[_productId].creationDate);
+    function getProductFromProductId(uint256  _productId) public view returns(address , string memory, string memory, uint ){
+        return (productInfos[_productId].productOwnerAddress,
+            productInfos[_productId].productOwnerName,
+            productInfos[_productId].productName,
+            productInfos[_productId].creationDate);
     }
 
     function getProductCount() public view returns(uint productCount) {
