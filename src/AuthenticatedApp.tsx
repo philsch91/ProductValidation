@@ -31,9 +31,6 @@ import deal from './static/DealContract.json';
 
 import './App.css';
 
-const AuthenticatedApp = React.lazy(() => import('./AuthenticatedApp'))
-const UnauthenticatedApp = React.lazy(() => import('./UnauthenticatedApp'))
-
 
 interface State {
   address: String;
