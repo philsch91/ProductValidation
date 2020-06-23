@@ -1,40 +1,51 @@
 import React from 'react';
-import { usePrevious } from './usePrevious';
-import { AuthContext } from './AuthContext';
+import { AuthContext, AuthContextProps } from './AuthContext';
 
+/*
 export type AuthProviderProps = {
-  defaultAuthenticated?: boolean;
-  onLogin?: () => void;
-  onLogout?: () => void;
+    isAuth: boolean;
+    username?: string;
+    token?: string;
+    login?: () => void;
+    logout?: () => void;
 };
+*/
 
-class AuthProvider extends React.Component<{}, AuthProviderProps> {
-    /*
-    public static defaultProps: AuthProviderProps = {
-        defaultAuthenticated = false,
-        onLogout,
-        onLogout,
-        children,
-    }; */
+/**
+ * AuthProvider should be always enclosed by a <Router></Router>
+ * The AuthProvider should then enclose the <Route path="/" component={Component} />
+ */
+export class AuthProvider extends React.Component<AuthContextProps, {}> {
+    state = { isAuth: false }
 
-    constructor(props: AuthProviderProps){
+    constructor(props: AuthContextProps) {
         super(props);
 
-        this.state = {
-            defaultAuthenticated: props.defaultAuthenticated ?? false, 
-            onLogin: props.onLogin, 
-            onLogout: props.onLogout
-        }
+        this.login = this.login.bind(this);
+        this.logout = this.logout.bind(this);
+    }
 
-        //this.state = { defaultAuthenticated !== undefined ? defaultA :  false }
-        //this.state
-        //React.useState()
-        //React.useMemo
-      }
+    login() {
+        console.log("login");
+        setTimeout(() => this.setState({ isAuth: true }), 1000);
+    }
 
-    return () {
+    logout() {
+        this.setState({ isAuth: false });
+    }
+
+    render() {
         return (
-            <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
+            <AuthContext.Provider
+                value={{
+                isAuth: this.state.isAuth,
+                login: this.login,
+                logout: this.logout
+                }}
+            >
+            {this.props.children}
+            </AuthContext.Provider>
         );
     }
+
 }

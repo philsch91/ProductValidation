@@ -31,7 +31,6 @@ import deal from './static/DealContract.json';
 
 import './App.css';
 
-
 interface State {
   address: String;
   account: Account
@@ -42,7 +41,7 @@ interface State {
   products: Product[];
 }
 
-class App extends React.Component<{}, State, AccountDelegate> {
+class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
   //web3: Web3;
   state = {
     address: "",
@@ -384,4 +383,4 @@ class App extends React.Component<{}, State, AccountDelegate> {
   };
 }
 
-export default App;
+export default AuthenticatedApp;
