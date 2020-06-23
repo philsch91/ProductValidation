@@ -3,18 +3,18 @@ import { Product } from '../models/product';
 
 interface Props {
   product: Product;
-  onChangeBuyer: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onChangeName: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onAdd: (event: React.FormEvent<HTMLFormElement>) => void;
 }
   
 export const ProductForm: React.FunctionComponent<Props> = ({
   product,
-  onChangeBuyer,
+  onChangeName,
   onAdd
   }) => (
     <form onSubmit={onAdd}>
-      <p>Buyer:</p>
-      <input onChange={onChangeBuyer} value={"" + product.buyer} />
-      <button type="submit">Safe Deal</button>
+      <p>Name:</p>
+      <input onChange={onChangeName} value={"" + product.name} />
+      <button type="submit">Save Product</button>
     </form>
 );

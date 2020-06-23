@@ -9,8 +9,7 @@ interface Props {
     product: Product;
     products: Product[];
     //onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-    onChangeBuyer: (event: React.ChangeEvent<HTMLInputElement>) => void;
-    //onChangeValue: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    onChangeName: (event: React.ChangeEvent<HTMLInputElement>) => void;
     onAdd: (event: React.FormEvent<HTMLFormElement>) => void;
     //onDelete: (Product: Product) => void;
 }
@@ -30,9 +29,8 @@ export class ProductComponent extends React.Component<Props> {
                 <h2>Products</h2>
                 <ProductForm
                     product={this.props.product}
-                    onChangeBuyer={this.props.onChangeBuyer}
                     //onChange={this.props.onChange}
-                    //onChangeValue={this.props.onChangeValue}
+                    onChangeName={this.props.onChangeName}
                     onAdd={this.props.onAdd}
                 />
                 <ProductList products={this.props.products} />

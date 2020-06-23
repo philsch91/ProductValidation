@@ -15,7 +15,7 @@ export class AuthComponent extends React.Component<Props> {
         return (
             <AuthConsumer> 
             {({ isAuth, username, token, login, logout }) => (
-            <form>
+            <form onSubmit={login}>
             <h3>Login</h3>
             <h4>{isAuth}</h4>
 
@@ -35,8 +35,8 @@ export class AuthComponent extends React.Component<Props> {
                     <label className="custom-control-label" htmlFor="customCheck1">Remember me</label>
                 </div>
             </div>
-            {/*<button type="submit" className="btn btn-primary btn-block">Submit</button> */}
-            <button onClick={login} className="btn btn-primary btn-block">Submit</button>
+            <button type="submit" className="btn btn-primary btn-block">Submit</button>
+            {/*<button onClick={login} className="btn btn-primary btn-block">Submit</button> */}
 
             <p className="forgot-password text-right">
                 Forgot <a href="#">password?</a>

@@ -7,14 +7,14 @@ interface Props {
   onSend: (event: React.FormEvent<HTMLFormElement>) => void;
 }
   
-export const ProductForm: React.FunctionComponent<Props> = ({
+export const ProductUpdateForm: React.FunctionComponent<Props> = ({
   product,
   onChangeName,
   onSend
   }) => (
     <form onSubmit={onSend}>
-      <p>Buyer:</p>
+      <p>Name:</p>
       <input onChange={onChangeName} value={"" + product.name} />
-      <button type="submit">Update Deal</button>
+      <button type="submit">Update Product</button>
     </form>
 );

@@ -19,6 +19,8 @@ class App extends React.Component<{}> {
   render() {
     //let app 
     return (
+      <AuthenticatedApp />
+      /*
       <AuthConsumer> 
         {({ isAuth }) => {
         //=> ({
@@ -28,18 +30,19 @@ class App extends React.Component<{}> {
         
           if (isAuth === true) {
             return <AuthenticatedApp />
-            /*
-            <React.Suspense fallback={<FullPageSpinner />}>
-              <AuthenticatedApp />
-            </React.Suspense> */
+            
+            //<React.Suspense fallback={<FullPageSpinner />}>
+              //<AuthenticatedApp />
+            //</React.Suspense>
           }
 
-          //return <AuthenticatedApp />
-          return <UnauthenticatedApp /> 
+          return <AuthenticatedApp />
+          //return <UnauthenticatedApp /> 
         }
         //)}
         }
       </AuthConsumer>
+      */
     );
   }
 }

@@ -17,10 +17,12 @@ import { HomeComponent } from './components/HomeComponent';
 import { LoginComponent } from './components/LoginComponent';
 import { TransactionComponent } from './components/TransactionComponent';
 import { ProductComponent } from './components/ProductComponent';
+import { DealComponent } from './components/DealComponent';
 
 import { Transaction } from './models/transaction';
 import { Account } from './models/account';
 import { Product } from './models/product';
+import { Deal } from './models/deal';
 
 import { Web3Manager } from './Web3Manager';
 import { Web3NodeManager } from './helpers/Web3NodeManager';
@@ -28,6 +30,7 @@ import { AccountDelegate } from './interfaces/AccountDelegate';
 
 import * as dealContract from './static/DealContract.json';
 import deal from './static/DealContract.json';
+import * as productContract from './static/ProductContract.json'
 
 import './App.css';
 
@@ -37,6 +40,8 @@ interface State {
   accounts: Account[];
   newTransaction: Transaction;
   transactions: Transaction[];
+  newDeal: Deal;
+  deals: Deal[];
   newProduct: Product;
   products: Product[];
 }
@@ -58,11 +63,16 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
       name: ""
     },
     transactions: [],
-    newProduct: {
+    newDeal: {
       id: 0,
       name: "",
       buyer: "",
       courier: ""
+    },
+    deals: [],
+    newProduct: {
+      id: 0,
+      name: ""
     },
     products: []
   };
@@ -78,12 +88,13 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     return (
       <HashRouter>
         <div>
-          <h1>Web3.js Test</h1>
+          <h1>Product Validation</h1>
           <ul className="header">
             <li><NavLink exact to="/">Home</NavLink></li>
             <li><NavLink to="/login">Login</NavLink></li>
             <li><NavLink to="/transactions">Transactions</NavLink></li>
             <li><NavLink to="/products">Products</NavLink></li>
+            <li><NavLink to="/deals">Deals</NavLink></li>
           </ul>
           <div className="content">
             <WalletDiv account={this.state.account} />
@@ -107,13 +118,20 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
                 transactions={this.state.transactions}
                 onDelete={this.deleteTransaction}
               />} /*component={TransactionComponent}*/ />
-            <Route path="/products" render={props => 
-              <ProductComponent {...props}
-                product={this.state.newProduct}
-                products={this.state.products}
+            <Route path="/deals" render={props => 
+              <DealComponent {...props}
+                deal={this.state.newDeal}
+                deals={this.state.deals}
                 onChangeBuyer={this.handleNewProductChangeBuyer}
                 onAdd={this.addProductDeal}
               />} />
+            <Route path="/products" render={props =>
+              <ProductComponent {...props}
+              product={this.state.newProduct}
+              products={this.state.products}
+              onChangeName={this.changeProductName}
+              onAdd={this.addProduct} />
+            } />
           </div>
         </div>
       </HashRouter>
@@ -273,8 +291,8 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
 
   private handleNewProductChangeBuyer = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({
-      newProduct: {
-        ...this.state.newProduct,
+      newDeal: {
+        ...this.state.newDeal,
         buyer: event.target.value
       }
     });
@@ -283,7 +301,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
   private addProductDeal = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    var product = this.state.newProduct;
+    var product = this.state.newDeal;
 
     /**
      * It is not possible to use node.js 'fs' in the browser 
@@ -334,7 +352,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
 
     var code = {
       data: byteCode,
-      arguments: [this.state.newProduct.buyer]
+      arguments: [this.state.newDeal.buyer]
     } as DeployOptions
 
     console.log(code.arguments)
@@ -372,14 +390,90 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     //console.log(receipt);
   
     this.setState(previousState => ({
-      newProduct: {
-        id: previousState.newProduct.id + 1,
+      newDeal: {
+        id: previousState.newDeal.id + 1,
         name: "",
         buyer: "",
         courier: ""
       },
-      products: [...previousState.products, previousState.newProduct]
+      deals: [...previousState.deals, previousState.newDeal]
     }));
+  };
+
+  private changeProductName = (event: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({
+      newProduct: {
+        ...this.state.newProduct,
+        name: event.target.value
+      }
+    });
+  };
+
+  private addProduct = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    console.log("addProduct");
+
+    var product = this.state.newProduct;
+
+    const web3Manager = Web3NodeManager.getInstance();
+    web3Manager.unlockAccountSync(this.state.account.address, this.state.account.privateKey, 600, (status: boolean) => {
+      console.log("unlocked: " + status);
+    });
+
+    //workaround for compile time warning
+    let json = JSON.stringify(productContract.abi);
+    let abi = JSON.parse(json);
+
+    var contract = new web3Manager.eth.Contract(abi);
+    
+    let byteCode = productContract.bin
+
+    var code = {
+      data: byteCode,
+      arguments: []
+    } as DeployOptions
+
+    var sendMethod: ContractSendMethod = contract.deploy(code);
+
+    sendMethod.estimateGas().then((estimatedGas: number) => {
+      console.log("estimated gas: " + estimatedGas);
+    });
+    
+    var options = {
+      from: web3Manager.eth.defaultAccount,
+      gas: 894198,
+      gasPrice: web3Manager.utils.toWei('0.000003', 'ether')
+    } as SendOptions;
+
+    var promise = sendMethod.send(options,(error: Error, transactionHash: string) => {
+      if(error != null){
+        console.log(error);
+        return;
+      }
+      console.log(transactionHash);
+    });
+
+    promise.then((newContract: Contract) => {
+      contract.options.address = newContract.options.address;
+      console.log(contract);
+
+      newContract.methods.addProduct('Name','Company').estimateGas({from: web3Manager.eth.defaultAccount})
+        .then(function(gasAmount: Number){
+          console.log("gasAmount for send(): " + gasAmount);
+          
+          //gasPrice: String
+          //gas: Number
+          newContract.methods.addProduct('Name','Company').send({from: web3Manager.eth.defaultAccount, gasPrice: gasAmount})
+          .then(function(receipt: Object){
+            console.log(receipt);
+          });
+        })
+        .catch(function(error: Error){
+          console.log(error);
+        });
+      
+    });
+
   };
 }
 
