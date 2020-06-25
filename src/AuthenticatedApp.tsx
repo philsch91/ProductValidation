@@ -457,16 +457,37 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
       contract.options.address = newContract.options.address;
       console.log(contract);
 
-      newContract.methods.addProduct('Name','Company').estimateGas({from: web3Manager.eth.defaultAccount})
-        .then(function(gasAmount: Number){
+      // transaction 1
+      var transaction = newContract.methods.addProduct('Name','Company');
+      
+      var estimateGasPromise: Promise<any> = transaction.estimateGas({from: web3Manager.eth.defaultAccount});
+      estimateGasPromise.then(function(gasAmount: Number){
           console.log("gasAmount for send(): " + gasAmount);
           
-          //gasPrice: String
-          //gas: Number
-          newContract.methods.addProduct('Name','Company').send({from: web3Manager.eth.defaultAccount, gasPrice: gasAmount})
+          // gasPrice: String
+          // gas: Number
+          
+          //newContract.methods.addProduct('Name','Company').send()
+          transaction.send({from: web3Manager.eth.defaultAccount, gas: gasAmount})
           .then(function(receipt: Object){
+            console.log("received receipt");
             console.log(receipt);
+
+            // transaction 2
+            var transaction2 = newContract.methods.getProductFromProductId(1);
+
+            estimateGasPromise = transaction2.estimateGas({from: web3Manager.eth.defaultAccount});
+            estimateGasPromise.then(function(gasAmount: Number){
+              console.log("gasAmount for call(): " + gasAmount);
+
+              transaction2.call({from: web3Manager.eth.defaultAccount, gas: gasAmount})
+              .then(function(receipt2: Object){
+                console.log("received receipt2");
+                console.log(receipt2);
+              });
+            });
           });
+
         })
         .catch(function(error: Error){
           console.log(error);

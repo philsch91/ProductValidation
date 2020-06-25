@@ -31,15 +31,13 @@ contract Product {
         productId = 0;
     }
 
-    function addProduct(string memory _productOwnerName, string memory _productName) onlyWhileOpen public{
+    function addProduct(string memory _productOwnerName, string memory _productName) public onlyWhileOpen {
         Product.ProductInformation storage productInfo = productInfos[productId + 1];
-
 
         productInfo.productOwnerAddress = msg.sender;
         productInfo.productOwnerName = _productOwnerName;
         productInfo.productName = _productName;
         productInfo.creationDate = block.timestamp;
-
 
         productInfoList.push(productId + 1);
         productId = productId + 1;
@@ -61,7 +59,7 @@ contract Product {
         return productInfoList.length;
     }
 
-    function isProduct(uint256 _productId, address _productOwnerAddress, string memory _productName) view public returns(bool isIndeed) {
+    function isProduct(uint256 _productId, address _productOwnerAddress, string memory _productName) public view returns(bool isIndeed) {
 
         if(keccak256(abi.encodePacked(productInfos[_productId].productOwnerAddress)) == keccak256(abi.encodePacked(_productOwnerAddress)) ){
             if(keccak256(abi.encodePacked(productInfos[_productId].productName)) == keccak256(abi.encodePacked(_productName)) ){

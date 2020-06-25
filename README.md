@@ -28,7 +28,8 @@
 2. Check Solidity compiler version with `solc-js --version`
 
 ### Compile and Use Solidity Smart Contracts
-1. Compile bytecode and Application Binary Interface (ABI) with `solcjs --bin --abi Contract.sol`
-2. Combine both in a single file with the adapted `combine-contract.js`
-3. Copy the written file into to source code directory, e.g. /src/static/Contract.json
-4. Import the file with the bytecode and ABI in the code, i.e. `import contract from './static/Contract.json'`;
+1. Compile bytecode and Application Binary Interface (ABI) for your contract with `solcjs --bin --abi Contract.sol`
+2. Adapt the template script `combine-contract.js` or `combine-contract.mjs` to combine the bytecode and ABI in a single file.
+3. Execute the script with either `node combine-contract.mjs` or `node --experimental-modules combine-contract.mjs`
+4. Copy the written file into to source code directory, e.g. /src/static/Contract.json
+5. Import the file with the bytecode and ABI in the code, i.e. `import contract from './static/Contract.json'`;
