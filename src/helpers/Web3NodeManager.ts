@@ -1,4 +1,4 @@
-import { Web3Manager } from '../Web3Manager';
+import { Web3Manager } from '../lib/Web3Manager';
 
 export class Web3NodeManager extends Web3Manager {
     private static instance: Web3Manager;

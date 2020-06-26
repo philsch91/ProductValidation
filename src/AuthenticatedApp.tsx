@@ -20,13 +20,14 @@ import { ProductComponent } from './components/ProductComponent';
 import { DealComponent } from './components/DealComponent';
 
 import { Transaction } from './models/transaction';
-import { Account } from './models/account';
 import { Product } from './models/product';
 import { Deal } from './models/deal';
 
-import { Web3Manager } from './Web3Manager';
+import { Web3Manager } from './lib/Web3Manager';
 import { Web3NodeManager } from './helpers/Web3NodeManager';
-import { AccountDelegate } from './interfaces/AccountDelegate';
+import { Account } from './lib/interfaces/account';
+import { AccountDelegate } from './lib/interfaces/AccountDelegate';
+//import { Web3Contract } from './lib/models/Web3Contract';
 
 import * as dealContract from './static/DealContract.json';
 import deal from './static/DealContract.json';
@@ -425,6 +426,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     let abi = JSON.parse(json);
 
     var contract = new web3Manager.eth.Contract(abi);
+    //var contract = new Web3Contract(abi);
     
     let byteCode = productContract.bin
 
@@ -459,6 +461,8 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
 
       // transaction 1
       var transaction = newContract.methods.addProduct('Name','Company');
+      //var transaction = newContract.methods.addProduct('Name','Company') as Web3Contract;
+      //transaction.estimateGasSync({from: web3Manager.eth.defaultAccount});
       
       var estimateGasPromise: Promise<any> = transaction.estimateGas({from: web3Manager.eth.defaultAccount});
       estimateGasPromise.then(function(gasAmount: Number){
@@ -476,6 +480,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
             // transaction 2
             var transaction2 = newContract.methods.getProductFromProductId(1);
 
+            /*
             estimateGasPromise = transaction2.estimateGas({from: web3Manager.eth.defaultAccount});
             estimateGasPromise.then(function(gasAmount: Number){
               console.log("gasAmount for call(): " + gasAmount);
@@ -485,11 +490,20 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
                 console.log("received receipt2");
                 console.log(receipt2);
               });
+            }); */
+
+            web3Manager.call(transaction2).then(function(receipt2: Object){
+              console.log("received receipt2");
+              console.log(receipt2);
+            }).catch(function(error: Error){
+              console.log(error);
             });
+
           });
 
         })
         .catch(function(error: Error){
+          console.log("error thrown");
           console.log(error);
         });
       

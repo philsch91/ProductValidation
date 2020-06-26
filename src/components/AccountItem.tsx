@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from "react";
-import { Account } from "../models/account";
+import { Account } from "../lib/interfaces/account";
 
 interface Props {
   account: Account;

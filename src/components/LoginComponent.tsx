@@ -4,7 +4,7 @@ import { LoginForm } from './LoginForm';
 import { AccountForm } from './AccountForm';
 import { AccountList } from './AccountList';
 
-import { Account } from '../models/account';
+import { Account } from '../lib/interfaces/account';
 
 interface State {
 

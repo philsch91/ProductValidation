@@ -2,7 +2,7 @@ import Web3 from 'web3';
 import { Contract, ContractOptions, ContractSendMethod, SendOptions, DeployOptions } from 'web3-eth-contract';
 import { Personal } from 'web3-eth-personal';
 import { Accounts } from 'web3-eth-accounts';
-import { Account } from './models/account';
+import { Account } from './interfaces/account';
 import { AccountDelegate } from './interfaces/AccountDelegate';
 
 export class Web3Manager extends Web3 {
@@ -142,5 +142,55 @@ export class Web3Manager extends Web3 {
     public async unlockAccountSync(address: string, password: string, unlockduration: number, callback: (status: boolean) => void){
         const unlockStatus: boolean = await this.eth.personal.unlockAccount(address, password, unlockduration);
         callback(unlockStatus);
+    }
+
+    private async estimateGas(transaction: any, callback?:(error?: Error, gas?: Number) => void): Promise<Number> {
+        var gas: Number = 0;
+        
+        try {
+            gas = await transaction.estimateGas({from: this.eth.defaultAccount});
+        } catch (error) {
+            if (!callback) {
+                throw error;
+            }
+            callback(error);
+            return 0;
+        }
+
+        // TODO: move console.log() into application specific callback
+        console.log("estimateGas: " + gas);
+        
+        if (callback) {
+            callback(undefined, gas);
+        }
+        
+        return gas;
+    }
+
+    public async send(transaction: Object, callback?: (error?: Error, receipt?: Object) => void): Promise<any> {
+        return;
+    }
+
+    public async call(transaction: any, callback?: (error?: Error, receipt?: Object) => void): Promise<any> {
+        var gas: Number = 0;
+        var receipt: Object;
+        
+        try {
+            //gas = await transaction.estimateGas({from: this.eth.defaultAccount});
+            gas = await this.estimateGas(transaction);
+            receipt = await transaction.call({from: this.eth.defaultAccount, gas: gas});
+        } catch (error) {
+            if (!callback) {
+                throw error;
+            }
+            callback(error);
+            return;
+        }
+        
+        if (callback) {
+            callback(undefined, receipt);
+        }
+        
+        return receipt;
     }
 }
