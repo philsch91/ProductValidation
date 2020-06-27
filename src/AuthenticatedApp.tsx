@@ -181,17 +181,17 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
         web3Manager.setProvider((window as any).ethereum);
         (window as any).ethereum.enable();
         console.log("Enabled Metamask Provider");
-      } else if ((window as any).web3) {
+      }
+      else if ((window as any).web3) {
         // Use Mist/MetaMask's provider.
         web3Manager.setProvider((window as any).web3);
         console.log('Injected web3 detected.');
+      }else{ //Only for debugging and should be removed in productive environments
+        const provider = new Web3.providers.HttpProvider('http://127.0.0.1:7545');
+        web3Manager.setProvider(provider);
+        console.log('No web3 instance injected, using Local web3.');
       }
-      
-      return;
     }
-
-    const provider = new Web3.providers.WebsocketProvider('ws://' + this.state.address);
-    web3Manager.setProvider(provider);
   }
 
   private addTransaction = (event: React.FormEvent<HTMLFormElement>) => {
@@ -447,6 +447,9 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     });
   }
 
+  /**
+   *
+   */
   private deployProduct = () => {
     console.log("deployProduct");
 
@@ -487,6 +490,9 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     });
   };
 
+  /**
+   *
+   */
   private addProduct = () => {
     //event: React.FormEvent<HTMLFormElement>
     //event.preventDefault();
@@ -503,7 +509,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     let json = JSON.stringify(productContract.abi);
     let abi = JSON.parse(json);
 
-    var contract = new web3Manager.eth.Contract(abi, '0xC7502df1517D540F8f49C367586e32bDB5FFAfa9');
+    var contract = new web3Manager.eth.Contract(abi, '0x8295e77AC1A42f1f5053fE910b6FcF183ffA7661');
     let byteCode = productContract.bin
 
     var deployOpts = {

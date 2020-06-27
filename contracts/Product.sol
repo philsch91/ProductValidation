@@ -3,9 +3,9 @@ pragma solidity >=0.6.1;
 //pragma experimental ABIEncoderV2;
 
 contract Product {
-    address public owner;
-    uint256 startTime;
-    uint256 productId;
+    address payable private owner;
+    uint256 private startTime;
+    uint256 private productId;
 
     event ReturnValue(address productOwnerAddress, string productOwnerName, string productName, uint creationDate);
 
@@ -25,34 +25,44 @@ contract Product {
         _;
     }
 
+    modifier onlyOwner () {
+        require(msg.sender == owner);
+        _;
+    }
+
     constructor() public {
         owner = msg.sender;
-        startTime = 1579399089;
+        startTime = now;
         productId = 0;
     }
 
-    function addProduct(string memory _productOwnerName, string memory _productName) public onlyWhileOpen {
+    function close() public onlyOwner { //onlyOwner is custom modifier
+        selfdestruct(owner);  // `owner` is the owners address
+    }
+
+    function addProduct(string memory _productOwnerName, string memory _productName) public onlyWhileOpen onlyOwner{
+
         Product.ProductInformation storage productInfo = productInfos[productId + 1];
 
         productInfo.productOwnerAddress = msg.sender;
         productInfo.productOwnerName = _productOwnerName;
         productInfo.productName = _productName;
-        productInfo.creationDate = block.timestamp;
+        productInfo.creationDate = now;
 
         productInfoList.push(productId + 1);
         productId = productId + 1;
     }
 
 
-    function getAllProductIds() public view returns(uint256[] memory){
+    function getAllProductIds() public view onlyOwner returns(uint256[] memory){
         return productInfoList;
     }
 
     function getProductFromProductId(uint256  _productId) public view returns(address , string memory, string memory, uint ){
         return (productInfos[_productId].productOwnerAddress,
-            productInfos[_productId].productOwnerName,
-            productInfos[_productId].productName,
-            productInfos[_productId].creationDate);
+        productInfos[_productId].productOwnerName,
+        productInfos[_productId].productName,
+        productInfos[_productId].creationDate);
     }
 
     function getProductCount() public view returns(uint productCount) {
