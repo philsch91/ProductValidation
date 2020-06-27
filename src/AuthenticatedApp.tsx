@@ -73,7 +73,8 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     deals: [],
     newProduct: {
       id: 0,
-      name: ""
+      name: "",
+      company: ""
     },
     products: []
   };
@@ -130,8 +131,11 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
               <ProductComponent {...props}
               product={this.state.newProduct}
               products={this.state.products}
-              onChangeName={this.changeProductName}
-              onAdd={this.addProduct} />
+              onChangeProductName={this.changeProductName}
+              onChangeProductCompany={this.changeProductCompany}
+              onAdd={this.addProduct}
+              onDeploy={this.deployProduct}
+              />
             } />
           </div>
         </div>
@@ -162,6 +166,30 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     event.preventDefault();
 
     const web3Manager = Web3NodeManager.getInstance();
+
+    /**
+     * Web3 assigns window.ethereum to Web3.givenProvider property 
+     * if the provider is ERC1193 compliant (as MetaMask)
+     * web3.currentProvider is the provider that web3 was initialized with
+     * web3.givenProvider is the provider injected by the environment (like window.ethereum)
+     * https://stackoverflow.com/questions/55822581/what-is-the-difference-between-currentprovider-and-givenprovider-in-web3-js
+     * https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1193.md
+     */
+    
+    if (web3Manager.currentProvider == null) {
+      if ((window as any).ethereum) {
+        web3Manager.setProvider((window as any).ethereum);
+        (window as any).ethereum.enable();
+        console.log("Enabled Metamask Provider");
+      } else if ((window as any).web3) {
+        // Use Mist/MetaMask's provider.
+        web3Manager.setProvider((window as any).web3);
+        console.log('Injected web3 detected.');
+      }
+      
+      return;
+    }
+
     const provider = new Web3.providers.WebsocketProvider('ws://' + this.state.address);
     web3Manager.setProvider(provider);
   }
@@ -410,11 +438,17 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     });
   };
 
-  private addProduct = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    console.log("addProduct");
+  private changeProductCompany = (event: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({
+      newProduct: {
+        ...this.state.newProduct,
+        company: event.target.value
+      }
+    });
+  }
 
-    var product = this.state.newProduct;
+  private deployProduct = () => {
+    console.log("deployProduct");
 
     const web3Manager = Web3NodeManager.getInstance();
     web3Manager.unlockAccountSync(this.state.account.address, this.state.account.privateKey, 600, (status: boolean) => {
@@ -447,56 +481,60 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
       }
 
       contract.options.address = newContract.options.address;
+      console.log("contract:");
       console.log(newContract);
+      console.log("contract address: " + newContract.options.address);
+    });
+  };
 
-      // transaction 1
-      var transaction = newContract.methods.addProduct('Name','Company');
-      //var transaction = newContract.methods.addProduct('Name','Company') as Web3Contract;
-      //transaction.estimateGasSync({from: web3Manager.eth.defaultAccount});
+  private addProduct = () => {
+    //event: React.FormEvent<HTMLFormElement>
+    //event.preventDefault();
+    console.log("addProduct");
+
+    var product = this.state.newProduct;
+
+    const web3Manager = Web3NodeManager.getInstance();
+    web3Manager.unlockAccountSync(this.state.account.address, this.state.account.privateKey, 600, (status: boolean) => {
+      console.log("unlocked: " + status);
+    });
+
+    //workaround for compile time warning
+    let json = JSON.stringify(productContract.abi);
+    let abi = JSON.parse(json);
+
+    var contract = new web3Manager.eth.Contract(abi, '0xC7502df1517D540F8f49C367586e32bDB5FFAfa9');
+    let byteCode = productContract.bin
+
+    var deployOpts = {
+      data: byteCode,
+      arguments: []
+    } as DeployOptions
+    
+    var sendOpts = {
+      //from: web3Manager.eth.defaultAccount, //set by Web3Manager
+      //gas: 894198, // estimated by Web3Manager.deploy()
+      gasPrice: web3Manager.utils.toWei('0.000003', 'ether')
+    } as SendOptions;
+
+    var transaction = contract.methods.addProduct(product.name, product.company);
+
+    web3Manager.send(transaction)
+    .then(function(receipt: Object){
+      console.log("received receipt");
+      console.log(receipt);
+
+      var transaction2 = contract.methods.getProductFromProductId(1);
       
-      var estimateGasPromise: Promise<any> = transaction.estimateGas({from: web3Manager.eth.defaultAccount});
-      estimateGasPromise.then(function(gasAmount: Number){
-          console.log("gasAmount for send(): " + gasAmount);
-          
-          // gasPrice: String
-          // gas: Number
-          
-          //newContract.methods.addProduct('Name','Company').send()
-          transaction.send({from: web3Manager.eth.defaultAccount, gas: gasAmount})
-          .then(function(receipt: Object){
-            console.log("received receipt");
-            console.log(receipt);
-
-            // transaction 2
-            var transaction2 = newContract.methods.getProductFromProductId(1);
-
-            /*
-            estimateGasPromise = transaction2.estimateGas({from: web3Manager.eth.defaultAccount});
-            estimateGasPromise.then(function(gasAmount: Number){
-              console.log("gasAmount for call(): " + gasAmount);
-
-              transaction2.call({from: web3Manager.eth.defaultAccount, gas: gasAmount})
-              .then(function(receipt2: Object){
-                console.log("received receipt2");
-                console.log(receipt2);
-              });
-            }); */
-
-            web3Manager.call(transaction2).then(function(receipt2: Object){
-              console.log("received receipt2");
-              console.log(receipt2);
-            }).catch(function(error: Error){
-              console.log(error);
-            });
-
-          });
-
-        })
-        .catch(function(error: Error){
-          console.log("error thrown");
-          console.log(error);
-        });
-      
+      web3Manager.call(transaction2)
+      .then(function(receipt2: Object){
+        console.log("received receipt2");
+        console.log(receipt2);
+      }).catch(function(error: Error){
+        console.log(error);
+      });
+    }).catch(function(error: Error){
+      console.log(error);
     });
 
   };
