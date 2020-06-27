@@ -426,38 +426,28 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     let abi = JSON.parse(json);
 
     var contract = new web3Manager.eth.Contract(abi);
-    //var contract = new Web3Contract(abi);
-    
     let byteCode = productContract.bin
 
-    var code = {
+    var deployOpts = {
       data: byteCode,
       arguments: []
     } as DeployOptions
-
-    var sendMethod: ContractSendMethod = contract.deploy(code);
-
-    sendMethod.estimateGas().then((estimatedGas: number) => {
-      console.log("estimated gas: " + estimatedGas);
-    });
     
-    var options = {
-      from: web3Manager.eth.defaultAccount,
-      gas: 894198,
+    var sendOpts = {
+      //from: web3Manager.eth.defaultAccount, //set by Web3Manager
+      //gas: 894198, // estimated by Web3Manager.deploy()
       gasPrice: web3Manager.utils.toWei('0.000003', 'ether')
     } as SendOptions;
 
-    var promise = sendMethod.send(options,(error: Error, transactionHash: string) => {
-      if(error != null){
-        console.log(error);
+    var promise = web3Manager.deploy(contract, deployOpts, sendOpts);
+
+    promise.then((newContract: Contract | null) => {
+      if (newContract == null) {
         return;
       }
-      console.log(transactionHash);
-    });
 
-    promise.then((newContract: Contract) => {
       contract.options.address = newContract.options.address;
-      console.log(contract);
+      console.log(newContract);
 
       // transaction 1
       var transaction = newContract.methods.addProduct('Name','Company');
