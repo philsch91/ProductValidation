@@ -37,7 +37,7 @@ import './App.css';
 
 interface State {
   address: String;
-  account: Account
+  account: Account;
   accounts: Account[];
   newTransaction: Transaction;
   transactions: Transaction[];
@@ -129,6 +129,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
               />} />
             <Route path="/products" render={props =>
               <ProductComponent {...props}
+              account={this.state.account}
               product={this.state.newProduct}
               products={this.state.products}
               onChangeProductName={this.changeProductName}

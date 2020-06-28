@@ -4,8 +4,10 @@ import { ProductForm } from './ProductForm';
 import { ProductList } from './ProductList';
 
 import { Product } from '../models/product';
+import { Account } from '../lib/interfaces/account';
 
 interface Props {
+    account: Account
     product: Product;
     products: Product[];
     //onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -31,6 +33,7 @@ export class ProductComponent extends React.Component<Props> {
             <div>
                 <h2>Products</h2>
                 <ProductForm
+                    account={this.props.account}
                     product={this.props.product}
                     //onChange={this.props.onChange}
                     onChangeProductName={this.props.onChangeProductName}
