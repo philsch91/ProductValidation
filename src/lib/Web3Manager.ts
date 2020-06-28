@@ -2,6 +2,7 @@ import Web3 from 'web3';
 import { Contract, ContractOptions, ContractSendMethod, SendOptions, DeployOptions } from 'web3-eth-contract';
 import { Personal } from 'web3-eth-personal';
 import { Accounts } from 'web3-eth-accounts';
+import { Providers, provider, HttpProvider, WebsocketProvider, IpcProvider } from 'web3-core';
 import { Account } from './interfaces/account';
 import { AccountDelegate } from './interfaces/AccountDelegate';
 
@@ -140,10 +141,15 @@ export class Web3Manager extends Web3 {
     }
 
     public async unlockAccountSync(address: string, password: string, unlockduration: number, callback: (status: boolean) => void){
+        //console.log(web3Manager.currentProvider);
+        // https://docs.metamask.io/guide/ethereum-provider.html#ethereum-provider-api
+        if((this.currentProvider as any).isMetaMask == true) {
+            //console.log("MetaMask provider detected");
+            return;
+        }
         const unlockStatus: boolean = await this.eth.personal.unlockAccount(address, password, unlockduration);
         callback(unlockStatus);
     }
-
     
     /**
      * estimateGas() estimates gas for either 

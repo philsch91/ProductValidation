@@ -76,8 +76,11 @@ export class ProductForm extends React.Component<ProductFormProps, ProductFormSt
     //workaround for compile time warning
     let json = JSON.stringify(productContract.abi);
     let abi = JSON.parse(json);
-
-    var contract = new web3Manager.eth.Contract(abi, '0xC7502df1517D540F8f49C367586e32bDB5FFAfa9');
+    
+    // Ganache
+    //var contract = new web3Manager.eth.Contract(abi, '0xC7502df1517D540F8f49C367586e32bDB5FFAfa9');
+    // Ropsten Testnet
+    var contract = new web3Manager.eth.Contract(abi, '0x15Be3530C9f7BE0d7fa55289Bc426e6B5DD47b29');
     let byteCode = productContract.bin
 
     var deployOpts = {
@@ -114,6 +117,7 @@ export class ProductForm extends React.Component<ProductFormProps, ProductFormSt
         
         {/*<button type="submit">Save Product</button>*/}
         <button onClick={this.addProduct} className="btn btn-primary btn-block">Save Product</button>
+        <button onClick={this.props.onDeploy} className="btn btn-primary btn-block">Deploy</button>
       </form>
     );
   }

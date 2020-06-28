@@ -182,17 +182,17 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
         web3Manager.setProvider((window as any).ethereum);
         (window as any).ethereum.enable();
         console.log("Enabled Metamask Provider");
-      }
-      else if ((window as any).web3) {
+      } else if ((window as any).web3) {
         // Use Mist/MetaMask's provider.
         web3Manager.setProvider((window as any).web3);
         console.log('Injected web3 detected.');
-      }else{ //Only for debugging and should be removed in productive environments
-        const provider = new Web3.providers.HttpProvider('http://127.0.0.1:7545');
-        web3Manager.setProvider(provider);
-        console.log('No web3 instance injected, using Local web3.');
       }
+      
+      return;
     }
+
+    const provider = new Web3.providers.WebsocketProvider('ws://' + this.state.address);
+    web3Manager.setProvider(provider);
   }
 
   private addTransaction = (event: React.FormEvent<HTMLFormElement>) => {
@@ -455,6 +455,8 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     console.log("deployProduct");
 
     const web3Manager = Web3NodeManager.getInstance();
+    console.log(web3Manager.eth.defaultAccount);
+
     web3Manager.unlockAccountSync(this.state.account.address, this.state.account.privateKey, 600, (status: boolean) => {
       console.log("unlocked: " + status);
     });
@@ -467,7 +469,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     let byteCode = productContract.bin
 
     var deployOpts = {
-      data: byteCode,
+      data: '0x' + byteCode,
       arguments: []
     } as DeployOptions
     
