@@ -43,7 +43,7 @@ interface State {
   transactions: Transaction[];
   newDeal: Deal;
   deals: Deal[];
-  newProduct: Product;
+  //newProduct: Product;
   products: Product[];
 }
 
@@ -71,11 +71,12 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
       courier: ""
     },
     deals: [],
+    /*
     newProduct: {
       id: 0,
       name: "",
       company: ""
-    },
+    },*/
     products: []
   };
 
@@ -130,11 +131,11 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
             <Route path="/products" render={props =>
               <ProductComponent {...props}
               account={this.state.account}
-              product={this.state.newProduct}
+              //product={this.state.newProduct}
               products={this.state.products}
-              onChangeProductName={this.changeProductName}
-              onChangeProductCompany={this.changeProductCompany}
-              onAdd={this.addProduct}
+              //onChangeProductName={this.changeProductName}
+              //onChangeProductCompany={this.changeProductCompany}
+              //onAdd={this.addProduct}
               onDeploy={this.deployProduct}
               />
             } />
@@ -429,25 +430,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
       deals: [...previousState.deals, previousState.newDeal]
     }));
   };
-
-  private changeProductName = (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({
-      newProduct: {
-        ...this.state.newProduct,
-        name: event.target.value
-      }
-    });
-  };
-
-  private changeProductCompany = (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({
-      newProduct: {
-        ...this.state.newProduct,
-        company: event.target.value
-      }
-    });
-  }
-
+  
   /**
    *
    */
@@ -493,60 +476,6 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     });
   };
 
-  /**
-   *
-   */
-  private addProduct = () => {
-    //event: React.FormEvent<HTMLFormElement>
-    //event.preventDefault();
-    console.log("addProduct");
-
-    var product = this.state.newProduct;
-
-    const web3Manager = Web3NodeManager.getInstance();
-    web3Manager.unlockAccountSync(this.state.account.address, this.state.account.privateKey, 600, (status: boolean) => {
-      console.log("unlocked: " + status);
-    });
-
-    //workaround for compile time warning
-    let json = JSON.stringify(productContract.abi);
-    let abi = JSON.parse(json);
-
-    var contract = new web3Manager.eth.Contract(abi, '0x8295e77AC1A42f1f5053fE910b6FcF183ffA7661');
-    let byteCode = productContract.bin
-
-    var deployOpts = {
-      data: byteCode,
-      arguments: []
-    } as DeployOptions
-    
-    var sendOpts = {
-      //from: web3Manager.eth.defaultAccount, //set by Web3Manager
-      //gas: 894198, // estimated by Web3Manager.deploy()
-      gasPrice: web3Manager.utils.toWei('0.000003', 'ether')
-    } as SendOptions;
-
-    var transaction = contract.methods.addProduct(product.name, product.company);
-
-    web3Manager.send(transaction)
-    .then(function(receipt: Object){
-      console.log("received receipt");
-      console.log(receipt);
-
-      var transaction2 = contract.methods.getProductFromProductId(1);
-      
-      web3Manager.call(transaction2)
-      .then(function(receipt2: Object){
-        console.log("received receipt2");
-        console.log(receipt2);
-      }).catch(function(error: Error){
-        console.log(error);
-      });
-    }).catch(function(error: Error){
-      console.log(error);
-    });
-
-  };
 }
 
 export default AuthenticatedApp;

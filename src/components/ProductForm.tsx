@@ -12,11 +12,11 @@ import * as productContract from '../static/ProductContract.json'
 
 interface ProductFormProps {
   account: Account
-  product: Product;
-  onChangeProductName: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  onChangeProductCompany: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  //product: Product;
+  //onChangeProductName: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  //onChangeProductCompany: (event: React.ChangeEvent<HTMLInputElement>) => void;
   //onAdd: (event: React.FormEvent<HTMLFormElement>) => void;
-  onAdd: () => void;
+  //onAdd: () => void;
   onDeploy: () => void;
 }
 
@@ -100,6 +100,17 @@ export class ProductForm extends React.Component<ProductFormProps, ProductFormSt
     .then(function(receipt: Object){
       console.log("received receipt");
       console.log(receipt);
+
+      var transaction2 = contract.methods.getProductFromProductId(1);
+      
+      web3Manager.call(transaction2)
+      .then(function(receipt2: Object){
+        console.log("received receipt2");
+        console.log(receipt2);
+      }).catch(function(error: Error){
+        console.log(error);
+      });
+
     }).catch(function(error: Error){
       console.log(error);
     });
