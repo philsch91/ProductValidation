@@ -3,7 +3,7 @@ import { Account } from "../lib/interfaces/account";
 import { AccountItem } from "./AccountItem";
 
 interface Props {
-  account: String;
+  account: string|null;
   //onChange: (account: Account) => void;
   //onSwitch: (event: React.FormEvent<HTMLFormElement>) => void;
   //onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;

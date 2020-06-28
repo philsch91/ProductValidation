@@ -6,6 +6,7 @@ import { ProductList } from './ProductList';
 import { Product } from '../models/product';
 
 interface Props {
+    account: string|null;
     product: Product;
     products: Product[];
     //onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -27,6 +28,12 @@ export class ProductComponent extends React.Component<Props> {
     }
     
     render(){
+        const body = <div>Hi!</div>;
+        if(this.props.account == null) {
+            return(<div>
+                Please login first! TODO: Referal component
+            </div>)
+        }
         return (
             <div>
                 <h2>Products</h2>
