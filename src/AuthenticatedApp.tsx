@@ -9,7 +9,6 @@ import * as path from 'path';
 
 import { NewTransactionForm } from './components/NewTransactionForm';
 import { TransactionList } from './components/TransactionList';
-import { AccountList } from './components/AccountList';
 import { WalletDiv } from './components/WalletDiv';
 import { AccountForm } from './components/AccountForm';
 import { LoginForm } from './components/LoginForm';
@@ -36,9 +35,7 @@ import * as productContract from './static/ProductContract.json'
 import './App.css';
 
 interface State {
-  address: String;
-  account: Account
-  accounts: Account[];
+  account: String;
   newTransaction: Transaction;
   transactions: Transaction[];
   newDeal: Deal;
@@ -49,17 +46,11 @@ interface State {
 
 class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
   //web3: Web3;
+
   state = {
-    address: "",
-    account: {
-      name: "test",
-      address: "",
-      privateKey: "",
-      balance: ""
-    },
-    accounts: [],
+    account: "",
     newTransaction: {
-      from: "", 
+      from: "",
       id: 0,
       name: ""
     },
@@ -79,10 +70,11 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     products: []
   };
 
+
   constructor(props: any){
     super(props);
     //8546
-    this.balanceDidChange = this.balanceDidChange.bind(this);
+   // this.balanceDidChange = this.balanceDidChange.bind(this);
   }
 
   render() {
@@ -103,13 +95,12 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
             <Route exact path="/" component={HomeComponent} />
             <Route path="/login" render={props => 
               <LoginComponent {...props}
-              address={this.state.address}
+              address={this.state.account}
               onAddressChange={this.handleAddressChange}
               onClick={this.connect}
-              privateKey={this.state.account.privateKey}
-              onPrivatKeyChange={this.handlePrivateKeyChange}
-              onSwitch={this.readAccounts} accounts={this.state.accounts}
-              onAccountChange={this.changeAccount} />} />
+              //onAccountChange={this.changeAccount}
+              />}
+            />
             <Route path="/transactions" render={props => 
               <TransactionComponent {...props}
                 transaction={this.state.newTransaction}
@@ -145,7 +136,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
 
   private handleAddressChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({
-      address: event.target.value
+      account: event.target.value
       /*
       address: {
         ...this.state.address,
@@ -154,14 +145,10 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     });
   };
 
-  private handlePrivateKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    var account: Account = this.state.account;
-    account.privateKey = event.target.value;
-    this.setState({
-      account: account
-    });
-  }
-
+  /**
+   * TODO: Merge
+   * @param event
+   */
   private connect = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -191,8 +178,78 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
         web3Manager.setProvider(provider);
         console.log('No web3 instance injected, using Local web3.');
       }
+
+      //If no provider could be set
+      if(!web3Manager.currentProvider){
+        alert("Please install Metamask to continue!");
+        return;
+      }
+        this.loadAccounts();
+        console.log(this.state.account);
+        web3Manager.eth.defaultAccount = this.state.account;
+        //web3Manager.accountDelegate = this;
+        web3Manager.stopUpdatingAccount();
+        web3Manager.startUpdatingAccount();
     }
   }
+
+  async loadAccounts(){
+    const web3Manager = Web3NodeManager.getInstance();
+    const accounts = await web3Manager.eth.getAccounts();
+    this.setState({
+      account: accounts[0]
+    });
+  }
+
+ /* async loadBlockchainData() {
+    const web3Manager = Web3NodeManager.getInstance();
+    const accounts = await web3Manager.eth.getAccounts()
+    this.setState({ account: accounts[0] })
+    const todoList = new web3Manager.eth.Contract(TODO_LIST_ABI, TODO_LIST_ADDRESS)
+    this.setState({ todoList })
+    const taskCount = await todoList.methods.taskCount().call()
+    this.setState({ taskCount })
+    for (var i = 1; i <= taskCount; i++) {
+      const task = await todoList.methods.tasks(i).call()
+      this.setState({
+        tasks: [...this.state.tasks, task]
+      })
+    }
+  }*/
+
+  /**
+   * TODO: Merge
+   * @param newAccount
+   */
+ /* private changeAccount = (newAccount: Account) => {
+    newAccount.privateKey = this.state.account.privateKey;
+    this.setState(previousState => ({
+      account: newAccount
+    }));
+
+    const web3Manager = Web3NodeManager.getInstance();
+    web3Manager.eth.defaultAccount = newAccount.address;
+    web3Manager.accountDelegate = this;
+    web3Manager.stopUpdatingAccount();
+    web3Manager.startUpdatingAccount();
+  };*/
+
+
+  /**
+   * TODO: Merge
+   * @param event
+   */
+  /*private readAccounts = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const web3Manager = Web3NodeManager.getInstance();
+
+    //web3Manager.readAccounts((error: Error, accounts: Account[]) => {
+    web3Manager.readAccountsAndBalances((error: Error, accounts: Account[]) => {
+      this.setState(previousState => ({
+        accounts: accounts
+      }));
+    });
+  };*/
 
   private addTransaction = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -249,51 +306,28 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     }));
   };
 
-  private handleAccountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+ /* private handleAccountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({
       account: {
         ...this.state.account,
         name: event.target.value
       }
     });
-  };
+  };*/
 
-  private changeAccount = (newAccount: Account) => {
-    newAccount.privateKey = this.state.account.privateKey;
-    this.setState(previousState => ({
-      account: newAccount
-    }));
 
-    const web3Manager = Web3NodeManager.getInstance();
-    web3Manager.eth.defaultAccount = newAccount.address;
-    web3Manager.accountDelegate = this;
-    web3Manager.stopUpdatingAccount();
-    web3Manager.startUpdatingAccount();
-  };
 
-  private readAccounts = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const web3Manager = Web3NodeManager.getInstance();
-    
-    //web3Manager.readAccounts((error: Error, accounts: Account[]) => {
-    web3Manager.readAccountsAndBalances((error: Error, accounts: Account[]) => {
-      this.setState(previousState => ({
-        accounts: accounts
-      }));
-    }); 
-  };
-
-  public balanceDidChange(manager: Web3Manager, updatedAccount: Account) {
+  /*public balanceDidChange(manager: Web3Manager, updatedAccount: String) {
     console.log(updatedAccount);
-    var account: Account = this.state.account;
+    var account: String = this.state.account;
     account.balance = updatedAccount.balance;
     this.setState(previousState => ({
       //account: updatedAccount
       account: account
     }));
-  }
+  }*/
 
-  private getAccounts = (event: React.FormEvent<HTMLFormElement>) => {
+  /*private getAccounts = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const web3Manager = Web3NodeManager.getInstance();
     
@@ -316,7 +350,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
         accounts: accountList
       }));
     });
-  };
+  };*/
 
   private handleNewProductChangeBuyer = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({
@@ -365,9 +399,9 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     console.log(dealContract);
 
     const web3Manager = Web3NodeManager.getInstance();
-    web3Manager.unlockAccountSync(this.state.account.address, this.state.account.privateKey, 600, (status: boolean) => {
+    /*web3Manager.unlockAccountSync(this.state.account.address, this.state.account.privateKey, 600, (status: boolean) => {
       console.log("unlocked: " + status);
-    });
+    });*/
 
     //workaround for compile time warning
     let json = JSON.stringify(dealContract.abi);
@@ -454,9 +488,9 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     console.log("deployProduct");
 
     const web3Manager = Web3NodeManager.getInstance();
-    web3Manager.unlockAccountSync(this.state.account.address, this.state.account.privateKey, 600, (status: boolean) => {
+    /*web3Manager.unlockAccountSync(this.state.account.address, this.state.account.privateKey, 600, (status: boolean) => {
       console.log("unlocked: " + status);
-    });
+    });*/
 
     //workaround for compile time warning
     let json = JSON.stringify(productContract.abi);
@@ -501,9 +535,9 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     var product = this.state.newProduct;
 
     const web3Manager = Web3NodeManager.getInstance();
-    web3Manager.unlockAccountSync(this.state.account.address, this.state.account.privateKey, 600, (status: boolean) => {
+    /*web3Manager.unlockAccountSync(this.state.account.address, this.state.account.privateKey, 600, (status: boolean) => {
       console.log("unlocked: " + status);
-    });
+    });*/
 
     //workaround for compile time warning
     let json = JSON.stringify(productContract.abi);

@@ -11,7 +11,6 @@ export const LoginForm: React.FunctionComponent<Props> = ({
   onAddressChange,
   onClick}) => (
     <form onSubmit={onClick}>
-      <input onChange={onAddressChange} value={address} />
       <button type="submit">Connect</button>
     </form>
 );
