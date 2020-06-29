@@ -1,13 +1,10 @@
 import React from 'react';
-import { Contract, ContractOptions, ContractSendMethod, SendOptions, DeployOptions } from 'web3-eth-contract';
+import { Contract } from 'web3-eth-contract';
 
-import { Web3Manager } from '../lib/Web3Manager';
-import { Account } from '../lib/interfaces/account';
 import { Web3NodeManager } from '../helpers/Web3NodeManager';
 
 import { Product } from '../models/product';
 
-import * as productContract from '../static/ProductContract.json'
 import * as productContractJson from "../static/Product.json";
 import {PRODUCT_CONTRACT_ADDRESS} from "../static/constants";
 //import '../../node_modules/bootstrap/dist/css/bootstrap.min.css';
@@ -74,6 +71,7 @@ export class ProductForm extends React.Component<ProductFormProps, ProductFormSt
     console.log(product);
     const contract = this.loadContract();
 
+    this.setState({loading: true})
     contract.methods.addProduct(product.name, product.company).send({from: this.props.account}).once('receipt', (receipt: any) => {
       this.setState({loading: false})
     }).catch((err: string) => {
@@ -85,18 +83,25 @@ export class ProductForm extends React.Component<ProductFormProps, ProductFormSt
 
   render(){
     return (
-      <form /*onSubmit={onAdd}*/>
-        <p>Name:</p>
-        {/*<input type="text" onChange={this.props.onChangeProductName} value={"" + this.state.product.name} />*/}
-        <input type="text" onChange={this.changeProductName} value={"" + this.state.product.name} />
-        <p>Company:</p>
-        {/*<input type="text" onChange={this.props.onChangeProductCompany} value={"" + this.state.product.company} />*/}
-        <input type="text" onChange={this.changeProductCompany} value={"" + this.state.product.company} />
-        
-        {/*<button type="submit">Save Product</button>*/}
-        <button onClick={this.addProductToSmartContract} className="btn btn-primary btn-block">Save Product</button>
-        <button onClick={this.props.onDeploy} className="btn btn-primary btn-block">Deploy</button>
-      </form>
+        <div>
+        { this.state.loading
+              ? <div id="loader" className="text-center"><p className="text-center">Loading...</p></div>
+              :
+              <form /*onSubmit={onAdd}*/>
+                <p>Name:</p>
+                {/*<input type="text" onChange={this.props.onChangeProductName} value={"" + this.state.product.name} />*/}
+                <input type="text" onChange={this.changeProductName} value={"" + this.state.product.name}/>
+                <p>Company:</p>
+                {/*<input type="text" onChange={this.props.onChangeProductCompany} value={"" + this.state.product.company} />*/}
+                <input type="text" onChange={this.changeProductCompany} value={"" + this.state.product.company}/>
+
+                {/*<button type="submit">Save Product</button>*/}
+                <button onClick={this.addProductToSmartContract} className="btn btn-primary btn-block">Save Product
+                </button>
+                <button onClick={this.props.onDeploy} className="btn btn-primary btn-block">Deploy</button>
+              </form>
+        }
+        </div>
     );
   }
 }

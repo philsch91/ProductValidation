@@ -10,15 +10,13 @@ import {ProductComponent} from './components/ProductComponent';
 import {DealComponent} from './components/DealComponent';
 
 import {Transaction} from './models/transaction';
-import {Product} from './models/product';
 import {Deal} from './models/deal';
 
 import {Web3NodeManager} from './helpers/Web3NodeManager';
 import {AccountDelegate} from './lib/interfaces/AccountDelegate';
 import * as dealContract from './static/DealContract.json';
 import * as productContract from './static/ProductContract.json'
-import * as productContractJson from './static/Product.json'
-import {PRODUCT_CONTRACT_ADDRESS, OWNER_ADDRESS} from './static/constants'
+import { OWNER_ADDRESS} from './static/constants'
 
 import './App.css';
 
@@ -143,18 +141,6 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
         );
     }
 
-
-    private handleAddressChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        this.setState({
-            account: event.target.value
-            /*
-            address: {
-              ...this.state.address,
-              name: event.target.value
-            } */
-        });
-    };
-
     /**
      * Connects to a web3 instance, like Metamask, and sets the wallet adress(es) in the state
      */
@@ -264,51 +250,6 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
             ]
         }));
     };
-
-    /* private handleAccountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-       this.setState({
-         account: {
-           ...this.state.account,
-           name: event.target.value
-         }
-       });
-     };*/
-
-
-    /*public balanceDidChange(manager: Web3Manager, updatedAccount: String) {
-      console.log(updatedAccount);
-      var account: String = this.state.account;
-      account.balance = updatedAccount.balance;
-      this.setState(previousState => ({
-        //account: updatedAccount
-        account: account
-      }));
-    }*/
-
-    /*private getAccounts = (event: React.FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      const web3Manager = Web3NodeManager.getInstance();
-
-      web3Manager.eth.getAccounts((error: Error, accounts: string[]) => {
-        var accountList:Account[] = new Array(accounts.length)
-        var i = 0
-        for(let key in accounts){
-          const address: string = accounts[key];
-          console.log(address);
-          //let account: Account = {id:"0", name:"test"};
-          //let account = {id:"0", name: "test"} as Account;
-          let account = { name: i.toString(), address: address, privateKey: "", balance: "" } as Account;
-          accountList[i] = account
-          i++
-        }
-
-        //this.state.accounts = accountList
-        this.setState(previousState => ({
-          //accounts: [...previousState.accounts.filter(account => account.id !== accountToChange.id)]
-          accounts: accountList
-        }));
-      });
-    };*/
 
     private handleNewProductChangeBuyer = (event: React.ChangeEvent<HTMLInputElement>) => {
         this.setState({

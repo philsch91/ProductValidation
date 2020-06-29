@@ -1,10 +1,6 @@
 import React from 'react';
 
 import { ProductForm } from './ProductForm';
-import { ProductList } from './ProductList';
-
-import { Product } from '../models/product';
-import { Account } from '../lib/interfaces/account';
 
 interface Props {
     account: string|null;
