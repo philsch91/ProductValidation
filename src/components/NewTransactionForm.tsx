@@ -19,7 +19,7 @@ export const NewTransactionForm: React.FunctionComponent<Props> = ({
       <p>To:</p>
       <input onChange={onChangeTo} value={"" + transaction.to} />
       <p>Value (Wei):</p>
-      <input onChange={onChangeValue} value={"" + new String(transaction.value)} />
+      <input onChange={onChangeValue} value={"" + String(transaction.value)} />
       <p>Textnote:</p>
       <input onChange={onChange} value={"" + transaction.name} />
       <button type="submit">Send transaction</button>

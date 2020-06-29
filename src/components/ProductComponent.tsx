@@ -28,7 +28,6 @@ export class ProductComponent extends React.Component<Props> {
     }
     
     render(){
-        const body = <div>Hi!</div>;
         if(this.props.account == null) {
             return(<div>
                 Please login first! TODO: Referal component

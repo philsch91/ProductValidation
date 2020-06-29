@@ -1,17 +1,8 @@
 import React from 'react';
-import logo from './logo.svg';
 import {Route, NavLink, HashRouter} from "react-router-dom";
 import Web3 from 'web3';
-import {Contract, ContractOptions, ContractSendMethod, SendOptions, DeployOptions} from 'web3-eth-contract';
-import {AbiItem} from 'web3-utils';
-//import * as fs from 'fs';
-import * as path from 'path';
+import {Contract, ContractSendMethod, SendOptions, DeployOptions} from 'web3-eth-contract';
 
-import {NewTransactionForm} from './components/NewTransactionForm';
-import {TransactionList} from './components/TransactionList';
-import {WalletDiv} from './components/WalletDiv';
-import {AccountForm} from './components/AccountForm';
-import {LoginForm} from './components/LoginForm';
 import {HomeComponent} from './components/HomeComponent';
 import {LoginComponent} from './components/LoginComponent';
 import {TransactionComponent} from './components/TransactionComponent';
@@ -22,17 +13,12 @@ import {Transaction} from './models/transaction';
 import {Product} from './models/product';
 import {Deal} from './models/deal';
 
-import {Web3Manager} from './lib/Web3Manager';
 import {Web3NodeManager} from './helpers/Web3NodeManager';
-import {Account} from './lib/interfaces/account';
 import {AccountDelegate} from './lib/interfaces/AccountDelegate';
-//import { Web3Contract } from './lib/models/Web3Contract';
-
 import * as dealContract from './static/DealContract.json';
-import deal from './static/DealContract.json';
 import * as productContract from './static/ProductContract.json'
 import * as productContractJson from './static/Product.json'
-import {PRODUCT_CONTRACT_ADDRESS} from './static/constants'
+import {PRODUCT_CONTRACT_ADDRESS, OWNER_ADDRESS} from './static/constants'
 
 import './App.css';
 
@@ -46,7 +32,6 @@ interface State {
     newProduct: Product;
     products: Product[];
     loading: boolean;
-    contract: Contract;
 }
 
 
@@ -75,8 +60,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
             company: ""
         },
         products: [],
-        loading: false,
-        contract: new (Web3NodeManager.getInstance().eth.Contract)(JSON.parse(JSON.stringify(productContractJson.abi)), PRODUCT_CONTRACT_ADDRESS)
+        loading: false
     };
 
 
@@ -108,7 +92,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
                         </li>
                         <li>
                             {
-                                this.state.account == null ? "" : <NavLink to="/products">Products</NavLink>
+                                this.state.account == null || (OWNER_ADDRESS != this.state.account) ? "" : <NavLink to="/products">Products</NavLink>
                             }
                         </li>
                         <li>
@@ -169,6 +153,10 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
                 </div>
             </HashRouter>
         );
+    }
+
+    private loadContract(): Contract{
+        return new (Web3NodeManager.getInstance().eth.Contract)(JSON.parse(JSON.stringify(productContractJson.abi)), PRODUCT_CONTRACT_ADDRESS)
     }
 
     private handleAddressChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -514,27 +502,20 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
      * Adds a product to the blockchain
      */
     private addProduct = async () => {
-        //event: React.FormEvent<HTMLFormElement>
-        //event.preventDefault();
         console.log("addProduct");
 
         var product = this.state.newProduct;
 
-        const web3Manager = Web3NodeManager.getInstance();
-
-
-        const contract = this.state.contract;
+        const contract = this.loadContract();
         this.setState({loading: true});
-        const ids = await contract.methods.getProductCount().call();
-        console.log("Count: " + ids);
-        //contract.options.gasPrice = web3Manager.utils.toWei('0.000003', 'ether');
+
         contract.methods.addProduct(product.name, product.company).send({from: this.state.account}).once('receipt', (receipt: any) => {
             this.setState({loading: false})
         }).catch((err: string) => {
             console.log("Failed with error: " + err);
             alert("Transaction has been reverted due to an error!")
+            this.setState({loading: false})
         });
-
     };
 }
 
