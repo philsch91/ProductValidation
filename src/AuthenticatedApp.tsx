@@ -31,17 +31,22 @@ import {AccountDelegate} from './lib/interfaces/AccountDelegate';
 import * as dealContract from './static/DealContract.json';
 import deal from './static/DealContract.json';
 import * as productContract from './static/ProductContract.json'
+import * as productContractJson from './static/Product.json'
+import {PRODUCT_CONTRACT_ADDRESS} from './static/constants'
 
 import './App.css';
 
 interface State {
-    account: string|null;
+    account: string | null;
+    accounts: string[];
     newTransaction: Transaction;
     transactions: Transaction[];
     newDeal: Deal;
     deals: Deal[];
     newProduct: Product;
     products: Product[];
+    loading: boolean;
+    contract: Contract;
 }
 
 
@@ -50,6 +55,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
 
     state = {
         account: null,
+        accounts: [],
         newTransaction: {
             from: "",
             id: 0,
@@ -68,14 +74,16 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
             name: "",
             company: ""
         },
-        products: []
+        products: [],
+        loading: false,
+        contract: new (Web3NodeManager.getInstance().eth.Contract)(JSON.parse(JSON.stringify(productContractJson.abi)), PRODUCT_CONTRACT_ADDRESS)
     };
 
 
     constructor(props: any) {
         super(props);
         //8546
-        // this.balanceDidChange = this.balanceDidChange.bind(this);
+        this.addProduct = this.addProduct.bind(this);
     }
 
     render() {
@@ -88,13 +96,27 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
                         <li><NavLink exact to="/">Home</NavLink></li>
 
                         <li>
-                        {
-                            this.state.account != null ? <NavLink to="/logout">Logout</NavLink> : <NavLink to="/login">Login</NavLink>
-                        }
+                            {
+                                this.state.account != null ? <NavLink to="/logout">Logout</NavLink> :
+                                    <NavLink to="/login">Login</NavLink>
+                            }
                         </li>
-                        <li><NavLink to="/transactions">Transactions</NavLink></li>
-                        <li><NavLink to="/products">Products</NavLink></li>
-                        <li><NavLink to="/deals">Deals</NavLink></li>
+                        <li>
+                            {
+                                this.state.account == null ? "" : <NavLink to="/transactions">Transactions</NavLink>
+                            }
+                        </li>
+                        <li>
+                            {
+                                this.state.account == null ? "" : <NavLink to="/products">Products</NavLink>
+                            }
+                        </li>
+                        <li>
+                            {
+                                this.state.account == null ? "" : <NavLink to="/deals">Deals</NavLink>
+                            }
+                        </li>
+
                     </ul>
                     <div className="content">
                         <Route exact path="/" component={HomeComponent}/>
@@ -109,8 +131,9 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
                                         }}
                                         isLoggedIn={this.state.account != null}
                                     />
-                                );}
+                                );
                             }
+                        }
                         }
                         />
                         <Route path="/transactions" render={props =>
@@ -139,6 +162,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
                                               onChangeProductCompany={this.changeProductCompany}
                                               onAdd={this.addProduct}
                                               onDeploy={this.deployProduct}
+                                              loading={this.state.loading}
                             />
                         }/>
                     </div>
@@ -159,8 +183,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     };
 
     /**
-     * TODO: Merge
-     * @param event
+     * Connects to a web3 instance, like Metamask, and sets the wallet adress(es) in the state
      */
     private connect = async () => {
 
@@ -179,15 +202,15 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
         if (web3Manager.currentProvider == null) {
             if ((window as any).ethereum) {
                 web3Manager.setProvider((window as any).ethereum);
-                (window as any).ethereum.enable();
+                await (window as any).ethereum.enable();
                 console.log("Enabled Metamask Provider");
             } else if ((window as any).web3) {
                 // Use Mist/MetaMask's provider.
-                web3Manager.setProvider((window as any).web3);
+                await web3Manager.setProvider((window as any).web3);
                 console.log('Injected web3 detected.');
             } else { //Only for debugging and should be removed in productive environments
                 const provider = new Web3.providers.HttpProvider('http://127.0.0.1:7545');
-                web3Manager.setProvider(provider);
+                await web3Manager.setProvider(provider);
                 console.log('No web3 instance injected, using Local web3.');
             }
 
@@ -199,69 +222,21 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
             await this.loadAccounts();
             console.log(this.state.account);
             web3Manager.eth.defaultAccount = this.state.account;
-            //web3Manager.accountDelegate = this;
-            web3Manager.stopUpdatingAccount();
-            web3Manager.startUpdatingAccount();
         }
     }
 
+    /**
+     * Loads accounts from the web3 instance and sets them in the state
+     */
     async loadAccounts() {
         const web3Manager = Web3NodeManager.getInstance();
         const accounts = await web3Manager.eth.getAccounts();
         this.setState({
-            account: accounts[0]
+            account: accounts[0],
+            accounts: accounts
         });
     }
 
-    /* async loadBlockchainData() {
-       const web3Manager = Web3NodeManager.getInstance();
-       const accounts = await web3Manager.eth.getAccounts()
-       this.setState({ account: accounts[0] })
-       const todoList = new web3Manager.eth.Contract(TODO_LIST_ABI, TODO_LIST_ADDRESS)
-       this.setState({ todoList })
-       const taskCount = await todoList.methods.taskCount().call()
-       this.setState({ taskCount })
-       for (var i = 1; i <= taskCount; i++) {
-         const task = await todoList.methods.tasks(i).call()
-         this.setState({
-           tasks: [...this.state.tasks, task]
-         })
-       }
-     }*/
-
-    /**
-     * TODO: Merge
-     * @param newAccount
-     */
-    /* private changeAccount = (newAccount: Account) => {
-       newAccount.privateKey = this.state.account.privateKey;
-       this.setState(previousState => ({
-         account: newAccount
-       }));
-
-       const web3Manager = Web3NodeManager.getInstance();
-       web3Manager.eth.defaultAccount = newAccount.address;
-       web3Manager.accountDelegate = this;
-       web3Manager.stopUpdatingAccount();
-       web3Manager.startUpdatingAccount();
-     };*/
-
-
-    /**
-     * TODO: Merge
-     * @param event
-     */
-    /*private readAccounts = (event: React.FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      const web3Manager = Web3NodeManager.getInstance();
-
-      //web3Manager.readAccounts((error: Error, accounts: Account[]) => {
-      web3Manager.readAccountsAndBalances((error: Error, accounts: Account[]) => {
-        this.setState(previousState => ({
-          accounts: accounts
-        }));
-      });
-    };*/
 
     private addTransaction = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -536,9 +511,9 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     };
 
     /**
-     *
+     * Adds a product to the blockchain
      */
-    private addProduct = () => {
+    private addProduct = async () => {
         //event: React.FormEvent<HTMLFormElement>
         //event.preventDefault();
         console.log("addProduct");
@@ -546,46 +521,18 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
         var product = this.state.newProduct;
 
         const web3Manager = Web3NodeManager.getInstance();
-        /*web3Manager.unlockAccountSync(this.state.account.address, this.state.account.privateKey, 600, (status: boolean) => {
-          console.log("unlocked: " + status);
-        });*/
 
-        //workaround for compile time warning
-        let json = JSON.stringify(productContract.abi);
-        let abi = JSON.parse(json);
 
-        var contract = new web3Manager.eth.Contract(abi, '0x8295e77AC1A42f1f5053fE910b6FcF183ffA7661');
-        let byteCode = productContract.bin
-
-        var deployOpts = {
-            data: byteCode,
-            arguments: []
-        } as DeployOptions
-
-        var sendOpts = {
-            //from: web3Manager.eth.defaultAccount, //set by Web3Manager
-            //gas: 894198, // estimated by Web3Manager.deploy()
-            gasPrice: web3Manager.utils.toWei('0.000003', 'ether')
-        } as SendOptions;
-
-        var transaction = contract.methods.addProduct(product.name, product.company);
-
-        web3Manager.send(transaction)
-            .then(function (receipt: Object) {
-                console.log("received receipt");
-                console.log(receipt);
-
-                var transaction2 = contract.methods.getProductFromProductId(1);
-
-                web3Manager.call(transaction2)
-                    .then(function (receipt2: Object) {
-                        console.log("received receipt2");
-                        console.log(receipt2);
-                    }).catch(function (error: Error) {
-                    console.log(error);
-                });
-            }).catch(function (error: Error) {
-            console.log(error);
+        const contract = this.state.contract;
+        this.setState({loading: true});
+        const ids = await contract.methods.getProductCount().call();
+        console.log("Count: " + ids);
+        //contract.options.gasPrice = web3Manager.utils.toWei('0.000003', 'ether');
+        contract.methods.addProduct(product.name, product.company).send({from: this.state.account}).once('receipt', (receipt: any) => {
+            this.setState({loading: false})
+        }).catch((err: string) => {
+            console.log("Failed with error: " + err);
+            alert("Transaction has been reverted due to an error!")
         });
 
     };

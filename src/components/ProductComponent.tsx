@@ -15,7 +15,7 @@ interface Props {
     //onAdd: (event: React.FormEvent<HTMLFormElement>) => void;
     onAdd: () => void;
     onDeploy: () => void;
-    //onDelete: (Product: Product) => void;
+    loading: boolean;
 }
 
 export class ProductComponent extends React.Component<Props> {
@@ -37,14 +37,18 @@ export class ProductComponent extends React.Component<Props> {
         return (
             <div>
                 <h2>Products</h2>
-                <ProductForm
-                    product={this.props.product}
-                    //onChange={this.props.onChange}
-                    onChangeProductName={this.props.onChangeProductName}
-                    onChangeProductCompany={this.props.onChangeProductCompany}
-                    onAdd={this.props.onAdd}
-                    onDeploy={this.props.onDeploy}
-                />
+                { this.props.loading
+                    ? <div id="loader" className="text-center"><p className="text-center">Loading...</p></div>
+                    : <ProductForm
+                        product={this.props.product}
+                        //onChange={this.props.onChange}
+                        onChangeProductName={this.props.onChangeProductName}
+                        onChangeProductCompany={this.props.onChangeProductCompany}
+                        onAdd={this.props.onAdd}
+                        onDeploy={this.props.onDeploy}
+                    />
+
+                }
                 <ProductList products={this.props.products} />
             </div>
         );
