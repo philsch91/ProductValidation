@@ -84,7 +84,8 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
                         </li>
                         <li>
                             {
-                                this.state.account == null || (OWNER_ADDRESS != this.state.account) ? "" : <NavLink to="/products">Products</NavLink>
+                                this.state.account == null || (OWNER_ADDRESS != this.state.account) ? "" :
+                                    <NavLink to="/products">Products</NavLink>
                             }
                         </li>
                         <li>
@@ -132,11 +133,6 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
                         <Route path="/products" render={props =>
                             <ProductComponent {...props}
                                               account={this.state.account}
-                                              product={this.state.newProduct}
-                                              products={this.state.products}
-                                              onChangeProductName={this.changeProductName}
-                                              onChangeProductCompany={this.changeProductCompany}
-                                              onAdd={this.addProduct}
                                               onDeploy={this.deployProduct}
                                               loading={this.state.loading}
                             />
@@ -147,9 +143,6 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
         );
     }
 
-    private loadContract(): Contract{
-        return new (Web3NodeManager.getInstance().eth.Contract)(JSON.parse(JSON.stringify(productContractJson.abi)), PRODUCT_CONTRACT_ADDRESS)
-    }
 
     private handleAddressChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         this.setState({
@@ -326,23 +319,81 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
         });
     };
 
-    private changeProductName = (event: React.ChangeEvent<HTMLInputElement>) => {
-        this.setState({
-            newProduct: {
-                ...this.state.newProduct,
-                name: event.target.value
-            }
-        });
-    };
 
-    private changeProductCompany = (event: React.ChangeEvent<HTMLInputElement>) => {
-        this.setState({
-            newProduct: {
-                ...this.state.newProduct,
-                company: event.target.value
-            }
+
+    private addProductDeal = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        /**
+         * It is not possible to use node.js 'fs' in the browser
+         * and have it directly affect the file system on the server.
+         * https://stackoverflow.com/questions/29762282/using-node-jss-file-system-functions-from-a-browser
+         */
+
+
+        //print static import
+        console.log(dealContract);
+
+        const web3Manager = Web3NodeManager.getInstance();
+
+        //workaround for compile time warning
+        let json = JSON.stringify(dealContract.abi);
+        let abi = JSON.parse(json);
+
+        //var contract = new web3Manager.eth.Contract(dealContract.abi);
+        //var contract = new web3Manager.eth.Contract(deal.abi);
+        var contract = new web3Manager.eth.Contract(abi);
+        //var contract = new Contract(dealContract.abi);  //no connection
+        let byteCode = dealContract.bin
+
+        var code = {
+            data: byteCode,
+            arguments: [this.state.newDeal.buyer]
+        } as DeployOptions
+
+        console.log(code.arguments)
+
+        //TODO: combine ContractSendMethod.estimateGas() and .send() in web3Manager.send(gasPrice?: string)
+
+        var sendMethod: ContractSendMethod = contract.deploy(code);
+
+        sendMethod.estimateGas().then((estimatedGas: number) => {
+            console.log("estimated gas: " + estimatedGas);
         });
-    }
+
+        var options = {
+            from: web3Manager.eth.defaultAccount,
+            gas: 1625814,
+            gasPrice: web3Manager.utils.toWei('0.000003', 'ether')
+        } as SendOptions;
+
+        console.log(options);
+
+        var promise = sendMethod.send(options, (error: Error, transactionHash: string) => {
+            if (error != null) {
+                console.log(error);
+                return;
+            }
+            console.log(transactionHash);
+        });
+
+        promise.then((newContract: Contract) => {
+            contract.options.address = newContract.options.address;
+            console.log(contract);
+        });
+
+        //var receipt = web3Manager.eth.sendTransaction(transaction);
+        //console.log(receipt);
+
+        this.setState(previousState => ({
+            newDeal: {
+                id: previousState.newDeal.id + 1,
+                name: "",
+                buyer: "",
+                courier: ""
+            },
+            deals: [...previousState.deals, previousState.newDeal]
+        }));
+    };
 
     /**
      *
@@ -351,9 +402,8 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
         console.log("deployProduct");
 
         const web3Manager = Web3NodeManager.getInstance();
-        /*web3Manager.unlockAccountSync(this.state.account.address, this.state.account.privateKey, 600, (status: boolean) => {
-          console.log("unlocked: " + status);
-        });*/
+        console.log(web3Manager.eth.defaultAccount);
+
 
         //workaround for compile time warning
         let json = JSON.stringify(productContract.abi);
@@ -363,7 +413,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
         let byteCode = productContract.bin
 
         var deployOpts = {
-            data: byteCode,
+            data: '0x' + byteCode,
             arguments: []
         } as DeployOptions
 
@@ -386,172 +436,6 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
             console.log("contract address: " + newContract.options.address);
         });
     };
-
-    /**
-     * Adds a product to the blockchain
-     */
-    private addProduct = async () => {
-        console.log("addProduct");
-
-        var product = this.state.newProduct;
-
-        const contract = this.loadContract();
-        this.setState({loading: true});
-    
-        contract.methods.addProduct(product.name, product.company).send({from: this.state.account}).once('receipt', (receipt: any) => {
-            this.setState({loading: false})
-        }).catch((err: string) => {
-            console.log("Failed with error: " + err);
-            alert("Transaction has been reverted due to an error!")
-            this.setState({loading: false})
-        });
-    };
-
-      private addProductDeal = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-
-        var product = this.state.newDeal;
-
-        /**
-         * It is not possible to use node.js 'fs' in the browser
-         * and have it directly affect the file system on the server.
-         * https://stackoverflow.com/questions/29762282/using-node-jss-file-system-functions-from-a-browser
-         */
-
-        //const abiPath = path.resolve(__dirname, "contracts", "Deal_sol_Deal.abi");
-        //const abiPath = path.join("./", "contracts", "Deal_sol_Deal.abi");
-        //console.log(abiPath);
-        //const str = fs.readFileSync(path.join(__dirname, "filename.txt"), "utf-8");
-        //const contractAbi = fs.readFileSync(abiPath, "utf-8");
-
-        /*
-        const fs = require('fs');
-
-        let file = './static/DealContract.json';
-        let fileStats = false;
-
-        try {
-          let fileStats = fs.statSync(file);
-        } catch (error) {
-          console.log(error.message);
-          return false;
-        }
-    let dealContractJson = fs.readFileSync(file, 'utf8');
-    let contract = JSON.parse(dealContractJson);
-    */
-
-    //print static import
-    console.log(dealContract);
-
-    const web3Manager = Web3NodeManager.getInstance();
-    web3Manager.unlockAccountSync(this.state.account.address, this.state.account.privateKey, 600, (status: boolean) => {
-      console.log("unlocked: " + status);
-    });
-
-    //workaround for compile time warning
-    let json = JSON.stringify(dealContract.abi);
-    let abi = JSON.parse(json);
-
-    //var contract = new web3Manager.eth.Contract(dealContract.abi);
-    //var contract = new web3Manager.eth.Contract(deal.abi);
-    var contract = new web3Manager.eth.Contract(abi);
-    //var contract = new Contract(dealContract.abi);  //no connection
-    let byteCode = dealContract.bin
-
-    var code = {
-      data: byteCode,
-      arguments: [this.state.newDeal.buyer]
-    } as DeployOptions
-
-    console.log(code.arguments)
-
-    //TODO: combine ContractSendMethod.estimateGas() and .send() in web3Manager.send(gasPrice?: string)
-    
-    var sendMethod: ContractSendMethod = contract.deploy(code);
-
-    sendMethod.estimateGas().then((estimatedGas: number) => {
-      console.log("estimated gas: " + estimatedGas);
-    });
-
-    var options = {
-      from: web3Manager.eth.defaultAccount,
-      gas: 1625814,
-      gasPrice: web3Manager.utils.toWei('0.000003', 'ether')
-    } as SendOptions;
-
-    console.log(options);
-
-    var promise = sendMethod.send(options,(error: Error, transactionHash: string) => {
-      if(error != null){
-        console.log(error);
-        return;
-      }
-      console.log(transactionHash);
-    });
-
-    promise.then((newContract: Contract) => {
-      contract.options.address = newContract.options.address;
-      console.log(contract);
-    });
-    
-    //var receipt = web3Manager.eth.sendTransaction(transaction);
-    //console.log(receipt);
-  
-    this.setState(previousState => ({
-      newDeal: {
-        id: previousState.newDeal.id + 1,
-        name: "",
-        buyer: "",
-        courier: ""
-      },
-      deals: [...previousState.deals, previousState.newDeal]
-    }));
-  };
-  
-  /**
-   *
-   */
-  private deployProduct = () => {
-    console.log("deployProduct");
-
-    const web3Manager = Web3NodeManager.getInstance();
-    console.log(web3Manager.eth.defaultAccount);
-
-    web3Manager.unlockAccountSync(this.state.account.address, this.state.account.privateKey, 600, (status: boolean) => {
-      console.log("unlocked: " + status);
-    });
-
-    //workaround for compile time warning
-    let json = JSON.stringify(productContract.abi);
-    let abi = JSON.parse(json);
-
-    var contract = new web3Manager.eth.Contract(abi);
-    let byteCode = productContract.bin
-
-    var deployOpts = {
-      data: '0x' + byteCode,
-      arguments: []
-    } as DeployOptions
-    
-    var sendOpts = {
-      //from: web3Manager.eth.defaultAccount, //set by Web3Manager
-      //gas: 894198, // estimated by Web3Manager.deploy()
-      gasPrice: web3Manager.utils.toWei('0.000003', 'ether')
-    } as SendOptions;
-
-    var promise = web3Manager.deploy(contract, deployOpts, sendOpts);
-
-    promise.then((newContract: Contract | null) => {
-      if (newContract == null) {
-        return;
-      }
-
-      contract.options.address = newContract.options.address;
-      console.log("contract:");
-      console.log(newContract);
-      console.log("contract address: " + newContract.options.address);
-    });
-  };
 
 }
 

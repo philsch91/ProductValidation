@@ -8,8 +8,6 @@ import { Account } from '../lib/interfaces/account';
 
 interface Props {
     account: string|null;
-    product: Product;
-    products: Product[];
     onDeploy: () => void;
     loading: boolean;
 }
@@ -35,15 +33,12 @@ export class ProductComponent extends React.Component<Props> {
                 { this.props.loading
                     ? <div id="loader" className="text-center"><p className="text-center">Loading...</p></div>
                     : <ProductForm
-                        product={this.props.product}
-                        onChangeProductName={this.props.onChangeProductName}
-                        onChangeProductCompany={this.props.onChangeProductCompany}
-                        onAdd={this.props.onAdd}
+                        account={this.props.account}
                         onDeploy={this.props.onDeploy}
                     />
 
                 }
-                <ProductList products={this.props.products} />
+
             </div>
         );
     }
