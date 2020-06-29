@@ -7,10 +7,6 @@ interface Props {
 }
 
 export class HomeComponent extends React.Component<Props> {
-    
-    constructor(props: Props){
-        super(props);
-    }
 
     render(){
         return (

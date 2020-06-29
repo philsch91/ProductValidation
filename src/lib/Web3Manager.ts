@@ -15,19 +15,6 @@ export class Web3Manager extends Web3 {
         super();
         this.updateAccount = this.updateAccount.bind(this);
     }
-    
-    public static loadWeb3(){
-        /*
-        if(window.web3 !== undefined){
-            return new Web3(window.web3.currentProvider);
-        }
-        */
-    }
-
-    public async getBalanceSync(address: string): Promise<string> {
-        const balance: string = await this.eth.getBalance(address);
-        return balance;
-    }
 
     public async getAccountsSync(): Promise<string[]> {
         const addresses: string[] = await this.eth.getAccounts();
@@ -92,8 +79,6 @@ export class Web3Manager extends Web3 {
     }
 
     public startUpdatingAccount(): void {
-        //this.accountUpdateFlag = true;
-        //this.updateAccountWithTimeout();
         this.accountUpdateTimerId = window.setInterval(this.updateAccount, 5000);
     }
 

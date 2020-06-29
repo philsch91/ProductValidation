@@ -7,15 +7,11 @@ import { Product } from '../models/product';
 import { Account } from '../lib/interfaces/account';
 
 interface Props {
-    account: Account
-    //product: Product;
+    account: string|null;
+    product: Product;
     products: Product[];
-    //onChangeProductName: (event: React.ChangeEvent<HTMLInputElement>) => void;
-    //onChangeProductCompany: (event: React.ChangeEvent<HTMLInputElement>) => void;
-    //onAdd: (event: React.FormEvent<HTMLFormElement>) => void;
-    //onAdd: () => void;
     onDeploy: () => void;
-    //onDelete: (Product: Product) => void;
+    loading: boolean;
 }
 
 export class ProductComponent extends React.Component<Props> {
@@ -28,17 +24,25 @@ export class ProductComponent extends React.Component<Props> {
     }
     
     render(){
+        if(this.props.account == null) {
+            return(<div>
+                Please login first! TODO: Referal component
+            </div>)
+        }
         return (
             <div>
                 <h2>Products</h2>
-                <ProductForm
-                    account={this.props.account}
-                    //product={this.props.product}
-                    //onChangeProductName={this.props.onChangeProductName}
-                    //onChangeProductCompany={this.props.onChangeProductCompany}
-                    //onAdd={this.props.onAdd}
-                    onDeploy={this.props.onDeploy}
-                />
+                { this.props.loading
+                    ? <div id="loader" className="text-center"><p className="text-center">Loading...</p></div>
+                    : <ProductForm
+                        product={this.props.product}
+                        onChangeProductName={this.props.onChangeProductName}
+                        onChangeProductCompany={this.props.onChangeProductCompany}
+                        onAdd={this.props.onAdd}
+                        onDeploy={this.props.onDeploy}
+                    />
+
+                }
                 <ProductList products={this.props.products} />
             </div>
         );

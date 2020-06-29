@@ -1,8 +1,5 @@
 import React from 'react';
-import { AuthContext, AuthConsumer } from './context/AuthContext';
-import { AuthProvider } from './context/AuthProvider';
 import AuthenticatedApp from './AuthenticatedApp';
-import UnauthenticatedApp from './UnauthenticatedApp';
 
 import './App.css';
 
@@ -10,11 +7,6 @@ import './App.css';
 //const UnauthenticatedApp = React.lazy(() => import('./UnauthenticatedApp'))
 
 class App extends React.Component<{}> {
-
-  constructor(props: any){
-    super(props);
-    //8546
-  }
 
   render() {
     //let app 
