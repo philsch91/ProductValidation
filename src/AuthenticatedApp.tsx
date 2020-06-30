@@ -110,7 +110,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
                                     <ProductComponent {...props}
                                       account={this.state.account}
                                       onDeploy={this.deployProduct}
-                                      loading={this.state.loading}/>)
+                                      /*loading={this.state.loading} */ />)
                             }
                         }
                         }/>
