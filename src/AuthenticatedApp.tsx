@@ -1,6 +1,7 @@
 import React from 'react';
 import {Route, NavLink, HashRouter} from "react-router-dom";
 import Web3 from 'web3';
+import {TransactionConfig} from 'web3-eth';
 import {Contract, ContractSendMethod, SendOptions, DeployOptions} from 'web3-eth-contract';
 
 import {HomeComponent} from './components/HomeComponent';
@@ -16,21 +17,17 @@ import {Web3NodeManager} from './helpers/Web3NodeManager';
 import {AccountDelegate} from './lib/interfaces/AccountDelegate';
 import * as dealContract from './static/DealContract.json';
 import * as productContract from './static/ProductContract.json'
-import { OWNER_ADDRESS} from './static/constants'
+import {OWNER_ADDRESS} from './static/constants'
 
 import './App.css';
 
 interface State {
-
     account: string | null;
     accounts: string[];
-    newTransaction: Transaction;
     transactions: Transaction[];
-    newDeal: Deal;
     deals: Deal[];
     loading: boolean;
 }
-
 
 class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     //web3: Web3;
@@ -38,18 +35,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     state = {
         account: null,
         accounts: [],
-        newTransaction: {
-            from: "",
-            id: 0,
-            name: ""
-        },
         transactions: [],
-        newDeal: {
-            id: 0,
-            name: "",
-            buyer: "",
-            courier: ""
-        },
         deals: [],
         loading: false
     };
@@ -57,8 +43,10 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
 
     constructor(props: any) {
         super(props);
-    }
 
+        this.onAddTransaction = this.onAddTransaction.bind(this);
+        this.onAddDeal = this.onAddDeal.bind(this);
+    }
 
     render() {
         //<button onClick={this.readAccounts}>Change</button>
@@ -113,20 +101,13 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
                         />
                         <Route path="/transactions" render={props =>
                             <TransactionComponent {...props}
-                                                  transaction={this.state.newTransaction}
-                                                  onChange={this.handleTransactionChange}
-                                                  onChangeTo={this.handleTransactionChangeTo}
-                                                  onChangeValue={this.handleTransactionChangeValue}
-                                                  onAdd={this.addTransaction}
                                                   transactions={this.state.transactions}
-                                                  onDelete={this.deleteTransaction}
+                                                  onAddTransaction={this.onAddTransaction}
                             />} /*component={TransactionComponent}*/ />
                         <Route path="/deals" render={props =>
                             <DealComponent {...props}
-                                           deal={this.state.newDeal}
                                            deals={this.state.deals}
-                                           onChangeBuyer={this.handleNewProductChangeBuyer}
-                                           onAdd={this.addProductDeal}
+                                           onAddDeal={this.onAddDeal}
                             />}/>
                         <Route path="/products" render={props =>
                             <ProductComponent {...props}
@@ -145,8 +126,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
      * Connects to a web3 instance, like Metamask, and sets the wallet adress(es) in the state
      */
     private connect = async () => {
-
-
+        
         const web3Manager = Web3NodeManager.getInstance();
 
         /**
@@ -196,145 +176,17 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
         });
     }
 
-    private addTransaction = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-
-        var transaction = this.state.newTransaction;
-
-        const web3Manager = Web3NodeManager.getInstance();
-        var receipt = web3Manager.eth.sendTransaction(transaction);
-        console.log(receipt);
-
+    private onAddTransaction(transaction: Transaction): void {
         this.setState(previousState => ({
-            newTransaction: {
-                id: previousState.newTransaction.id + 1,
-                name: "",
-                from: ""
-            },
-            transactions: [...previousState.transactions, previousState.newTransaction]
+            transactions: [...previousState.transactions, transaction]
         }));
-    };
+    }
 
-    private handleTransactionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        this.setState({
-            newTransaction: {
-                ...this.state.newTransaction,
-                name: event.target.value
-            }
-        });
-    };
-
-    private handleTransactionChangeTo = (event: React.ChangeEvent<HTMLInputElement>) => {
-        this.setState({
-            newTransaction: {
-                ...this.state.newTransaction,
-                to: event.target.value
-            }
-        });
-    };
-
-    private handleTransactionChangeValue = (event: React.ChangeEvent<HTMLInputElement>) => {
-        this.setState({
-            newTransaction: {
-                ...this.state.newTransaction,
-                value: event.target.value
-            }
-        });
-    };
-
-    private deleteTransaction = (transactionToDelete: Transaction) => {
+    private onAddDeal(deal: Deal): void {
         this.setState(previousState => ({
-            transactions: [
-                //...previousState.transactions.filter(transaction => transaction.id !== transactionToDelete.id)
-                ...previousState.transactions.filter(transaction => transaction.id !== transactionToDelete.id)
-            ]
+            deals: [...previousState.deals, deal]
         }));
-    };
-
-    private handleNewProductChangeBuyer = (event: React.ChangeEvent<HTMLInputElement>) => {
-        this.setState({
-            newDeal: {
-                ...this.state.newDeal,
-                buyer: event.target.value
-            }
-        });
-    };
-
-
-
-    private addProductDeal = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        /**
-         * It is not possible to use node.js 'fs' in the browser
-         * and have it directly affect the file system on the server.
-         * https://stackoverflow.com/questions/29762282/using-node-jss-file-system-functions-from-a-browser
-         */
-
-
-        //print static import
-        console.log(dealContract);
-
-        const web3Manager = Web3NodeManager.getInstance();
-
-        //workaround for compile time warning
-        let json = JSON.stringify(dealContract.abi);
-        let abi = JSON.parse(json);
-
-        //var contract = new web3Manager.eth.Contract(dealContract.abi);
-        //var contract = new web3Manager.eth.Contract(deal.abi);
-        var contract = new web3Manager.eth.Contract(abi);
-        //var contract = new Contract(dealContract.abi);  //no connection
-        let byteCode = dealContract.bin
-
-        var code = {
-            data: byteCode,
-            arguments: [this.state.newDeal.buyer]
-        } as DeployOptions
-
-        console.log(code.arguments)
-
-        //TODO: combine ContractSendMethod.estimateGas() and .send() in web3Manager.send(gasPrice?: string)
-
-        var sendMethod: ContractSendMethod = contract.deploy(code);
-
-        sendMethod.estimateGas().then((estimatedGas: number) => {
-            console.log("estimated gas: " + estimatedGas);
-        });
-
-        var options = {
-            from: web3Manager.eth.defaultAccount,
-            gas: 1625814,
-            gasPrice: web3Manager.utils.toWei('0.000003', 'ether')
-        } as SendOptions;
-
-        console.log(options);
-
-        var promise = sendMethod.send(options, (error: Error, transactionHash: string) => {
-            if (error != null) {
-                console.log(error);
-                return;
-            }
-            console.log(transactionHash);
-        });
-
-        promise.then((newContract: Contract) => {
-            contract.options.address = newContract.options.address;
-            console.log(contract);
-        });
-
-        //var receipt = web3Manager.eth.sendTransaction(transaction);
-        //console.log(receipt);
-
-        this.setState(previousState => ({
-            newDeal: {
-                id: previousState.newDeal.id + 1,
-                name: "",
-                buyer: "",
-                courier: ""
-            },
-            deals: [...previousState.deals, previousState.newDeal]
-        }));
-    };
+    }
 
     /**
      *
@@ -344,7 +196,6 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
 
         const web3Manager = Web3NodeManager.getInstance();
         console.log(web3Manager.eth.defaultAccount);
-
 
         //workaround for compile time warning
         let json = JSON.stringify(productContract.abi);

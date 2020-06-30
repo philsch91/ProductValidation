@@ -15,6 +15,6 @@ export const DealForm: React.FunctionComponent<Props> = ({
     <form onSubmit={onAdd}>
       <p>Buyer:</p>
       <input onChange={onChangeBuyer} value={"" + deal.buyer} />
-        <button type="submit">Save Deal</button>
+      <button type="submit">Save Deal</button>
     </form>
 );
