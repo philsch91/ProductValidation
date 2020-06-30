@@ -26,12 +26,12 @@ export class ProductForm extends React.Component<ProductFormProps, ProductFormSt
     super(props);
     this.state={
       errors:[],
-      product: {name: "", company: ""},
-      loading: false
+      product: { productName: "", ownerName: ""},
+      loading: false,
     }
 
     this.changeProductName = this.changeProductName.bind(this);
-    this.changeProductCompany = this.changeProductCompany.bind(this);
+    this.changeOwnerName = this.changeOwnerName.bind(this);
     this.addProductToSmartContract = this.addProductToSmartContract.bind(this);
   }
 
@@ -39,16 +39,16 @@ export class ProductForm extends React.Component<ProductFormProps, ProductFormSt
     this.setState({
       product: {
         ...this.state.product,
-        name: event.target.value
+        productName: event.target.value
       }
     });
   }
 
-  private changeProductCompany(event: React.ChangeEvent<HTMLInputElement>): void {
+  private changeOwnerName(event: React.ChangeEvent<HTMLInputElement>): void {
     this.setState({
       product: {
         ...this.state.product,
-        company: event.target.value
+        ownerName: event.target.value
       }
     });
   }
@@ -65,13 +65,16 @@ export class ProductForm extends React.Component<ProductFormProps, ProductFormSt
    * Adds a product to the blockchain
    */
   public addProductToSmartContract(): void {
+
     console.log("ProductForm addProduct");
 
     const product = this.state.product;
     console.log(product);
     const contract = this.loadContract();
+
+    this.setState({loading: true})
     
-    contract.methods.addProduct(product.name, product.company).send({from: this.props.account}).once('receipt', (receipt: any) => {
+    contract.methods.addProduct(product.ownerName, product.productName).send({from: this.props.account}).once('receipt', (receipt: any) => {  
       this.setState({loading: false})
     }).catch((err: string) => {
       console.log("Failed with error: " + err);
@@ -86,15 +89,12 @@ export class ProductForm extends React.Component<ProductFormProps, ProductFormSt
         { this.state.loading
               ? <div id="loader" className="text-center"><p className="text-center">Loading...</p></div>
               :
-              <form /*onSubmit={onAdd}*/>
-                <p>Name:</p>
-                {/*<input type="text" onChange={this.props.onChangeProductName} value={"" + this.state.product.name} />*/}
-                <input type="text" onChange={this.changeProductName} value={"" + this.state.product.name}/>
-                <p>Company:</p>
-                {/*<input type="text" onChange={this.props.onChangeProductCompany} value={"" + this.state.product.company} />*/}
-                <input type="text" onChange={this.changeProductCompany} value={"" + this.state.product.company}/>
+              <form >
+                <p>Product Name:</p>
+                <input type="text" onChange={this.changeProductName} value={"" + this.state.product.productName}/>
+                <p>Owner Name:</p>
+                <input type="text" onChange={this.changeOwnerName} value={"" + this.state.product.ownerName}/>
 
-                {/*<button type="submit">Save Product</button>*/}
                 <button onClick={this.addProductToSmartContract} className="btn btn-primary btn-block">Save Product
                 </button>
                 <button onClick={this.props.onDeploy} className="btn btn-primary btn-block">Deploy</button>

@@ -14,7 +14,7 @@ export const ProductUpdateForm: React.FunctionComponent<Props> = ({
   }) => (
     <form onSubmit={onSend}>
       <p>Name:</p>
-      <input onChange={onChangeName} value={"" + product.name} />
+      <input onChange={onChangeName} value={"" + product.productName} />
       <button type="submit">Update Product</button>
     </form>
 );

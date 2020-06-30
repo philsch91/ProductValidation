@@ -19,9 +19,9 @@ export const ProductForm: React.FunctionComponent<Props> = ({
   }) => (
     <form /*onSubmit={onAdd}*/>
       <p>Name:</p>
-      <input onChange={onChangeProductName} value={"" + product.name} />
-      <p>Company:</p>
-      <input onChange={onChangeProductCompany} value={"" + product.company} />
+      <input onChange={onChangeProductName} value={"" + product.productName} />
+      <p>Owner Name:</p>
+      <input onChange={onChangeProductCompany} value={"" + product.ownerName} />
       
       {/*<button type="submit">Save Product</button>*/}
       <button onClick={onAdd} className="btn btn-primary btn-block">Save Product</button>

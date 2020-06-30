@@ -1,5 +1,5 @@
 import React from 'react';
-import {Route, NavLink, HashRouter} from "react-router-dom";
+import {Route, NavLink, HashRouter, Redirect} from "react-router-dom";
 import Web3 from 'web3';
 import {TransactionConfig} from 'web3-eth';
 import {Contract, ContractSendMethod, SendOptions, DeployOptions} from 'web3-eth-contract';
@@ -20,6 +20,7 @@ import * as productContract from './static/ProductContract.json'
 import {OWNER_ADDRESS} from './static/constants'
 
 import './App.css';
+import {ProductValidationComponent} from "./components/ProductValidationComponent";
 
 interface State {
     account: string | null;
@@ -40,7 +41,6 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
         loading: false
     };
 
-
     constructor(props: any) {
         super(props);
 
@@ -56,30 +56,11 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
                     <h1>Product Validation</h1>
                     <ul className="header">
                         <li><NavLink exact to="/">Home</NavLink></li>
-
-                        <li>
-                            {
-                                this.state.account != null ? <NavLink to="/logout">Logout</NavLink> :
-                                    <NavLink to="/login">Login</NavLink>
-                            }
-                        </li>
-                        <li>
-                            {
-                                this.state.account == null ? "" : <NavLink to="/transactions">Transactions</NavLink>
-                            }
-                        </li>
-                        <li>
-                            {
-                                this.state.account == null || (OWNER_ADDRESS != this.state.account) ? "" :
-                                    <NavLink to="/products">Products</NavLink>
-                            }
-                        </li>
-                        <li>
-                            {
-                                this.state.account == null ? "" : <NavLink to="/deals">Deals</NavLink>
-                            }
-                        </li>
-
+                        <li>{this.state.account != null ? <NavLink to="/logout">Logout</NavLink> : <NavLink to="/login">Login</NavLink>}</li>
+                        <li>{this.state.account == null ? "" : <NavLink to="/transactions">Transactions</NavLink>}</li>
+                        <li>{this.state.account == null || (OWNER_ADDRESS != this.state.account) ? "" : <NavLink to="/products">Add Products</NavLink>}</li>
+                        <li>{this.state.account == null ? "" : <NavLink to="/validateProducts">Validate Products</NavLink>}</li>
+                        <li>{this.state.account == null ? "" : <NavLink to="/deals">Deals</NavLink>}</li>
                     </ul>
                     <div className="content">
                         <Route exact path="/" component={HomeComponent}/>
@@ -99,22 +80,49 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
                         }
                         }
                         />
-                        <Route path="/transactions" render={props =>
-                            <TransactionComponent {...props}
-                                                  transactions={this.state.transactions}
-                                                  onAddTransaction={this.onAddTransaction}
-                            />} /*component={TransactionComponent}*/ />
-                        <Route path="/deals" render={props =>
-                            <DealComponent {...props}
-                                           deals={this.state.deals}
-                                           onAddDeal={this.onAddDeal}
-                            />}/>
-                        <Route path="/products" render={props =>
-                            <ProductComponent {...props}
-                                              account={this.state.account}
-                                              onDeploy={this.deployProduct}
-                                              loading={this.state.loading}
-                            />
+                        <Route path="/transactions" render={props => {
+                            if (this.state.account == null) {
+                                return ( <Redirect to={{pathname: "/login"}} /> )
+                            } else {
+                                return (
+                                    <TransactionComponent {...props}
+                                      transactions={this.state.transactions}
+                                      onAddTransaction={this.onAddTransaction}/>)
+                            }
+                        }
+                        }/>
+                        <Route path="/deals" render={props => {
+                            if (this.state.account == null) {
+                                return ( <Redirect to={{pathname: "/login"}} /> )
+                            } else {
+                                return (
+                                    <DealComponent {...props}
+                                      deals={this.state.deals}
+                                      onAddDeal={this.onAddDeal}/>)
+                            }
+                        }
+                        }/>
+                        <Route path="/products" render={props => {
+                            if (this.state.account == null) {
+                                return ( <Redirect to={{pathname: "/login"}} /> )
+                            } else {
+                                return (
+                                    <ProductComponent {...props}
+                                      account={this.state.account}
+                                      onDeploy={this.deployProduct}
+                                      loading={this.state.loading}/>)
+                            }
+                        }
+                        }/>
+                        <Route path="/validateProducts" render={props => {
+                            if (this.state.account == null) {
+                                return (<Redirect to={{pathname: "/login"}} /> )
+                            } else {
+                                return (
+                                    <ProductValidationComponent {...props}
+                                      account={this.state.account}/>)
+                            }
+                        }
                         }/>
                     </div>
                 </div>
