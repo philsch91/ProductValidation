@@ -72,7 +72,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
 
                         <li>
                             {
-                                this.state.account != null ? <NavLink to="/logout">Logout</NavLink> :
+                                this.state.account != null ? <button onClick={() => this.logout()}>Logout</button> :
                                     <NavLink to="/login">Login</NavLink>
                             }
                         </li>
@@ -442,6 +442,13 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
         });
     };
 
+    private logout() {
+        const web3Manager = Web3NodeManager.getInstance();
+        this.setState({account: null,
+            accounts: []});
+        web3Manager.setProvider(null);
+        return;
+    }
 }
 
 export default AuthenticatedApp;
