@@ -71,8 +71,10 @@ export class ProductForm extends React.Component<ProductFormProps, ProductFormSt
     const product = this.state.product;
     console.log(product);
     const contract = this.loadContract();
+
     this.setState({loading: true})
-    contract.methods.addProduct(product.ownerName, product.productName).send({from: this.props.account}).once('receipt', (receipt: any) => {
+    
+    contract.methods.addProduct(product.ownerName, product.productName).send({from: this.props.account}).once('receipt', (receipt: any) => {  
       this.setState({loading: false})
     }).catch((err: string) => {
       console.log("Failed with error: " + err);

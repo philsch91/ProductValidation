@@ -183,17 +183,19 @@ export class Web3Manager extends Web3 {
             gas = await this.estimateGas(sendMethod);
             //sendOptions.gas = +gas
             sendOptions.gas = Number(gas + "")  //without 'new' a primitive number is created
+            console.log(sendOptions);
             newContract = await sendMethod.send(sendOptions,(error: Error, txHash: string) => {
                 if (error != null) {
                     // TODO: move console.log() into application specific callback
                     console.log(error);
-                    throw error;
+                    return;
                 }
                 // TODO: move console.log() into application specific callback
                 console.log(txHash);
                 transactionHash = txHash;
               });
         } catch (error) {
+            console.log("catch");
             if (!callback) {
                 throw error;
             }
