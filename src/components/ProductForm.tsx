@@ -18,6 +18,7 @@ interface ProductFormState {
   errors: Error[];
   product: Product;
   loading: boolean;
+  currentTransaction: string;
 }
 
 export class ProductForm extends React.Component<ProductFormProps, ProductFormState> {
@@ -28,6 +29,7 @@ export class ProductForm extends React.Component<ProductFormProps, ProductFormSt
       errors:[],
       product: { productName: "", ownerName: ""},
       loading: false,
+      currentTransaction: ""
     }
 
     this.changeProductName = this.changeProductName.bind(this);
@@ -64,29 +66,37 @@ export class ProductForm extends React.Component<ProductFormProps, ProductFormSt
   /**
    * Adds a product to the blockchain
    */
-  public addProductToSmartContract(): void {
-
+  public async addProductToSmartContract(){
     console.log("ProductForm addProduct");
 
     const product = this.state.product;
     console.log(product);
     const contract = this.loadContract();
     this.setState({loading: true})
-    contract.methods.addProduct(product.ownerName, product.productName).send({from: this.props.account}).once('receipt', (receipt: any) => {
-      this.setState({loading: false})
+    const contractReturn = await contract.methods.addProduct(product.ownerName, product.productName).send({from: this.props.account}).once('receipt', (receipt: any) => {
+      this.setState({
+        loading: false
+      })
     }).catch((err: string) => {
       console.log("Failed with error: " + err);
       alert("Transaction has been reverted due to an error!")
       this.setState({loading: false})
     });
+
+    console.log(contractReturn.transactionHash);
+    this.setState({
+      currentTransaction: contractReturn.transactionHash
+    })
   }
 
   render(){
+    const ropstenTransactionLink = "https://ropsten.etherscan.io/tx/"+this.state.currentTransaction;
     return (
         <div>
         { this.state.loading
               ? <div id="loader" className="text-center"><p className="text-center">Loading...</p></div>
               :
+            <div>
               <form >
                 <p>Product Name:</p>
                 <input type="text" onChange={this.changeProductName} value={"" + this.state.product.productName}/>
@@ -97,7 +107,14 @@ export class ProductForm extends React.Component<ProductFormProps, ProductFormSt
                 </button>
                 <button onClick={this.props.onDeploy} className="btn btn-primary btn-block">Deploy</button>
               </form>
+              {this.state.currentTransaction != "" ?
+                  <a href={ropstenTransactionLink}>Link to transaction</a>
+                  :
+                  <p></p>
+              }
+            </div>
         }
+
         </div>
     );
   }
