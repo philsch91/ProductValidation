@@ -72,6 +72,7 @@ export class ProductForm extends React.Component<ProductFormProps, ProductFormSt
     const product = this.state.product;
     console.log(product);
     const contract = this.loadContract();
+
     this.setState({loading: true})
     const contractReturn = await contract.methods.addProduct(product.ownerName, product.productName).send({from: this.props.account}).once('receipt', (receipt: any) => {
       this.setState({
