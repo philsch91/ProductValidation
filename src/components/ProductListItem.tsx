@@ -14,7 +14,7 @@ export const ProductListItem: FunctionComponent<Props> = ({ product /*, onDelete
 
   return (
     <li>
-      {product.name} <button onClick={onClick}>X</button>
+      {product.productName} <button onClick={onClick}>X</button>
     </li>
   );
 };
