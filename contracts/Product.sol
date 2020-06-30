@@ -7,16 +7,15 @@ contract Product {
     uint256 private startTime;
     uint256 private productId;
 
-    event ReturnValue(address productOwnerAddress, string productOwnerName, string productName, uint creationDate);
+    event ReturnValue(string productOwnerName, string productName, uint creationDate);
 
-    struct ProductInformation{
-        address productOwnerAddress;
+    struct ProductInformation {
         string productOwnerName;
         string productName;
         uint creationDate;
     }
 
-    mapping (uint256 => ProductInformation) productInfos;
+    mapping(uint256 => ProductInformation) productInfos;
 
     uint256[] productInfoList;
 
@@ -36,15 +35,15 @@ contract Product {
         productId = 0;
     }
 
-    function close() public onlyOwner { //onlyOwner is custom modifier
-        selfdestruct(owner);  // `owner` is the owners address
+    function close() public onlyOwner {//onlyOwner is custom modifier
+        selfdestruct(owner);
+        // `owner` is the owners address
     }
 
-    function addProduct(string memory _productOwnerName, string memory _productName) public onlyWhileOpen onlyOwner{
+    function addProduct(string memory _productOwnerName, string memory _productName) public onlyWhileOpen onlyOwner {
 
         Product.ProductInformation storage productInfo = productInfos[productId + 1];
 
-        productInfo.productOwnerAddress = msg.sender;
         productInfo.productOwnerName = _productOwnerName;
         productInfo.productName = _productName;
         productInfo.creationDate = now;
@@ -54,27 +53,23 @@ contract Product {
     }
 
 
-    function getAllProductIds() public view onlyOwner returns(uint256[] memory){
+    function getAllProductIds() public view onlyOwner returns (uint256[] memory){
         return productInfoList;
     }
 
-    function getProductFromProductId(uint256  _productId) public view returns(address , string memory, string memory, uint ){
-        return (productInfos[_productId].productOwnerAddress,
-        productInfos[_productId].productOwnerName,
+    function getProductFromProductId(uint256 _productId) public view returns (string memory ownerName, string memory productName, uint creationDate){
+        return (productInfos[_productId].productOwnerName,
         productInfos[_productId].productName,
         productInfos[_productId].creationDate);
     }
 
-    function getProductCount() public view returns(uint productCount) {
+    function getProductCount() public view returns (uint productCount) {
         return productInfoList.length;
     }
 
-    function isProduct(uint256 _productId, address _productOwnerAddress, string memory _productName) public view returns(bool isIndeed) {
-
-        if(keccak256(abi.encodePacked(productInfos[_productId].productOwnerAddress)) == keccak256(abi.encodePacked(_productOwnerAddress)) ){
-            if(keccak256(abi.encodePacked(productInfos[_productId].productName)) == keccak256(abi.encodePacked(_productName)) ){
-                return true;
-            }
+    function isProduct(uint256 _productId, string memory _productName) public view returns (bool isIndeed) {
+        if (keccak256(abi.encodePacked(productInfos[_productId].productName)) == keccak256(abi.encodePacked(_productName))) {
+            return true;
         }
         return false;
     }

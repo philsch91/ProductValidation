@@ -1,5 +1,5 @@
 import React from 'react';
-import {Route, NavLink, HashRouter} from "react-router-dom";
+import {Route, NavLink, HashRouter, Redirect} from "react-router-dom";
 import Web3 from 'web3';
 import {Contract, ContractSendMethod, SendOptions, DeployOptions} from 'web3-eth-contract';
 
@@ -16,9 +16,10 @@ import {Web3NodeManager} from './helpers/Web3NodeManager';
 import {AccountDelegate} from './lib/interfaces/AccountDelegate';
 import * as dealContract from './static/DealContract.json';
 import * as productContract from './static/ProductContract.json'
-import { OWNER_ADDRESS} from './static/constants'
+import {OWNER_ADDRESS} from './static/constants'
 
 import './App.css';
+import {ProductValidationComponent} from "./components/ProductValidationComponent";
 
 interface State {
 
@@ -83,7 +84,13 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
                         <li>
                             {
                                 this.state.account == null || (OWNER_ADDRESS != this.state.account) ? "" :
-                                    <NavLink to="/products">Products</NavLink>
+                                    <NavLink to="/products">Add Products</NavLink>
+                            }
+                        </li>
+                        <li>
+                            {
+                                this.state.account == null ? "" :
+                                    <NavLink to="/validateProducts">Validate Products</NavLink>
                             }
                         </li>
                         <li>
@@ -111,29 +118,87 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
                         }
                         }
                         />
-                        <Route path="/transactions" render={props =>
-                            <TransactionComponent {...props}
-                                                  transaction={this.state.newTransaction}
-                                                  onChange={this.handleTransactionChange}
-                                                  onChangeTo={this.handleTransactionChangeTo}
-                                                  onChangeValue={this.handleTransactionChangeValue}
-                                                  onAdd={this.addTransaction}
-                                                  transactions={this.state.transactions}
-                                                  onDelete={this.deleteTransaction}
-                            />} /*component={TransactionComponent}*/ />
-                        <Route path="/deals" render={props =>
-                            <DealComponent {...props}
-                                           deal={this.state.newDeal}
-                                           deals={this.state.deals}
-                                           onChangeBuyer={this.handleNewProductChangeBuyer}
-                                           onAdd={this.addProductDeal}
-                            />}/>
-                        <Route path="/products" render={props =>
-                            <ProductComponent {...props}
-                                              account={this.state.account}
-                                              onDeploy={this.deployProduct}
-                                              loading={this.state.loading}
-                            />
+                        <Route path="/transactions" render={props => {
+                            if (this.state.account == null) {
+                                return (
+                                    <Redirect
+                                        to={{
+                                            pathname: "/login"
+                                        }}
+                                    />
+                                )
+                            } else {
+                                return (
+                                    <TransactionComponent {...props}
+                                                          transaction={this.state.newTransaction}
+                                                          onChange={this.handleTransactionChange}
+                                                          onChangeTo={this.handleTransactionChangeTo}
+                                                          onChangeValue={this.handleTransactionChangeValue}
+                                                          onAdd={this.addTransaction}
+                                                          transactions={this.state.transactions}
+                                                          onDelete={this.deleteTransaction}
+                                    />)
+                            }
+                        }
+                        }/>
+                        <Route path="/deals" render={props => {
+                            if (this.state.account == null) {
+                                return (
+                                    <Redirect
+                                        to={{
+                                            pathname: "/login"
+                                        }}
+                                    />
+                                )
+                            } else {
+                                return (
+
+                                    <DealComponent {...props}
+                                                   deal={this.state.newDeal}
+                                                   deals={this.state.deals}
+                                                   onChangeBuyer={this.handleNewProductChangeBuyer}
+                                                   onAdd={this.addProductDeal}
+
+                                    />)
+                            }
+                        }
+                        }/>
+                        <Route path="/products" render={props => {
+                            if (this.state.account == null) {
+                                return (
+                                    <Redirect
+                                        to={{
+                                            pathname: "/login"
+                                        }}
+                                    />
+                                )
+                            } else {
+                                return (
+
+                                    <ProductComponent {...props}
+                                                      account={this.state.account}
+                                                      onDeploy={this.deployProduct}
+                                    />)
+                            }
+                        }
+                        }/>
+                        <Route path="/validateProducts" render={props => {
+                            if (this.state.account == null) {
+                                return (
+                                    <Redirect
+                                        to={{
+                                            pathname: "/login"
+                                        }}
+                                    />
+                                )
+                            } else {
+                                return (
+
+                                    <ProductValidationComponent {...props}
+                                                                account={this.state.account}
+                                    />)
+                            }
+                        }
                         }/>
                     </div>
                 </div>
@@ -259,7 +324,6 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
             }
         });
     };
-
 
 
     private addProductDeal = (event: React.FormEvent<HTMLFormElement>) => {
