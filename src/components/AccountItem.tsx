@@ -2,8 +2,8 @@ import React, { FunctionComponent } from "react";
 import { Account } from "../lib/interfaces/account";
 
 interface Props {
-  account: Account;
-  onChange: (account: Account) => void;
+  account: '';
+  onChange: (account: String) => void;
 }
 
 export const AccountItem: FunctionComponent<Props> = ({ account, onChange }) => {
@@ -12,6 +12,6 @@ export const AccountItem: FunctionComponent<Props> = ({ account, onChange }) => 
   };
 
   return (
-    <li>{account.name} {account.address} <button onClick={onClick}>Change</button></li>
+    <li>account <button onClick={onClick}>Change</button></li>
   );
 };

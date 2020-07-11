@@ -3,14 +3,14 @@ import { Account } from "../lib/interfaces/account";
 import { AccountItem } from "./AccountItem";
 
 interface Props {
-  account: Account;
+  account: string|null;
   //onChange: (account: Account) => void;
   //onSwitch: (event: React.FormEvent<HTMLFormElement>) => void;
   //onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const WalletDiv: React.FunctionComponent<Props> = ({ account }) => (
-  <p>{account.name} {account.address} {account.privateKey} {account.balance}</p>
+  <p>account</p>
   /*
   //<input onChange={onChange} value={transaction.name} />
   <ul>
