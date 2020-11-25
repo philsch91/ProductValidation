@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from "react";
 import { Account } from "../lib/interfaces/account";
-import { AccountItem } from "./AccountItem";
+import { AccountListItem } from "./AccountListItem";
 
 interface Props {
   account: string|null;

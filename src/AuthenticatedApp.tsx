@@ -8,22 +8,25 @@ import {LoginComponent} from './components/LoginComponent';
 import {TransactionComponent} from './components/TransactionComponent';
 import {ProductComponent} from './components/ProductComponent';
 import {DealComponent} from './components/DealComponent';
+import {ProductValidationComponent} from "./components/ProductValidationComponent";
 
 import {Transaction} from './models/transaction';
 import {Deal} from './models/deal';
 
+import {Web3Manager} from './lib/Web3Manager';
 import {Web3NodeManager} from './helpers/Web3NodeManager';
+import {Account} from './lib/interfaces/account';
 import {AccountDelegate} from './lib/interfaces/AccountDelegate';
+
 import * as dealContract from './static/DealContract.json';
 import * as productContract from './static/ProductContract.json'
 import {OWNER_ADDRESS} from './static/constants'
 
 import './App.css';
-import {ProductValidationComponent} from "./components/ProductValidationComponent";
 
 interface State {
-    account: string | null;
-    accounts: string[];
+    account: Account | null;
+    //accounts: string[];
     transactions: Transaction[];
     deals: Deal[];
     loading: boolean;
@@ -34,7 +37,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
 
     state = {
         account: null,
-        accounts: [],
+        //accounts: [],
         transactions: [],
         deals: [],
         loading: false
@@ -44,6 +47,8 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
         super(props);
         this.onAddTransaction = this.onAddTransaction.bind(this);
         this.onAddDeal = this.onAddDeal.bind(this);
+        this.onChangeAccount = this.onChangeAccount.bind(this);
+        this.balanceDidChange = this.balanceDidChange.bind(this);
     }
 
     render() {
@@ -62,22 +67,16 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
                     </ul>
                     <div className="content">
                         <Route exact path="/" component={HomeComponent}/>
-
-                        <Route path="/login" render={props => {
-                            if (this.state.account == null) {
-                                return (
-                                    <LoginComponent
-                                        onClick={async (event) => {
-                                            event.preventDefault();
-                                            await this.connect();
-                                        }}
-                                        isLoggedIn={this.state.account != null}
-                                    />
-                                );
-                            }
-                        }
-                        }
-                        />
+                        <Route path="/login" render={props =>
+                            <LoginComponent {...props}
+                            //address={this.state.address}
+                            //onAddressChange={this.handleAddressChange}
+                            //privateKey={this.state.account.privateKey}
+                            //onPrivatKeyChange={this.handlePrivateKeyChange}
+                            //onSwitch={this.readAccounts} accounts={this.state.accounts}
+                            account={this.state.account}
+                            isLoggedIn={false}
+                            onChangeAccount={this.onChangeAccount} />}/>
                         <Route path="/transactions" render={props => {
                             if (this.state.account == null) {
                                 return ( <Redirect to={{pathname: "/login"}} /> )
@@ -126,60 +125,6 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
                 </div>
             </HashRouter>
         );
-    }
-
-    /**
-     * Connects to a web3 instance, like Metamask, and sets the wallet adress(es) in the state
-     */
-    private connect = async () => {
-
-        const web3Manager = Web3NodeManager.getInstance();
-
-        /**
-         * Web3 assigns window.ethereum to Web3.givenProvider property
-         * if the provider is ERC1193 compliant (as MetaMask)
-         * web3.currentProvider is the provider that web3 was initialized with
-         * web3.givenProvider is the provider injected by the environment (like window.ethereum)
-         * https://stackoverflow.com/questions/55822581/what-is-the-difference-between-currentprovider-and-givenprovider-in-web3-js
-         * https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1193.md
-         */
-
-        if (web3Manager.currentProvider == null) {
-            if ((window as any).ethereum) {
-                web3Manager.setProvider((window as any).ethereum);
-                await (window as any).ethereum.enable();
-                console.log("Enabled Metamask Provider");
-            } else if ((window as any).web3) {
-                // Use Mist/MetaMask's provider.
-                await web3Manager.setProvider((window as any).web3);
-                console.log('Injected web3 detected.');
-            } else { //Only for debugging and should be removed in productive environments
-                const provider = new Web3.providers.HttpProvider('http://127.0.0.1:7545');
-                await web3Manager.setProvider(provider);
-                console.log('No web3 instance injected, using Local web3.');
-            }
-
-            //If no provider could be set
-            if (!web3Manager.currentProvider) {
-                alert("Please install Metamask to continue!");
-                return;
-            }
-            await this.loadAccounts();
-            console.log(this.state.account);
-            web3Manager.eth.defaultAccount = this.state.account;
-        }
-    }
-
-    /**
-     * Loads accounts from the web3 instance and sets them in the state
-     */
-    async loadAccounts() {
-        const web3Manager = Web3NodeManager.getInstance();
-        const accounts = await web3Manager.eth.getAccounts();
-        this.setState({
-            account: accounts[0],
-            accounts: accounts
-        });
     }
 
     private onAddTransaction(transaction: Transaction): void {
@@ -235,12 +180,36 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
         });
     };
 
+    private onChangeAccount = (newAccount: Account) => {
+        this.setState(previousState => ({
+            account: newAccount
+        }));
+        const web3Manager = Web3NodeManager.getInstance();
+        web3Manager.accountDelegate = this;
+        web3Manager.stopUpdatingAccount();
+        web3Manager.startUpdatingAccount();
+    };
+
     private logout() {
         const web3Manager = Web3NodeManager.getInstance();
-        this.setState({account: null,
-            accounts: []});
+        this.setState({
+            account: null,
+            //accounts: []
+        });
         web3Manager.setProvider(null);
         return;
+    }
+
+    public balanceDidChange(manager: Web3Manager, updatedAccount: Account) {
+        console.log(updatedAccount);
+        /*
+        var account: Account = this.state.account;
+        account.balance = updatedAccount.balance;
+        this.setState(previousState => ({
+          //account: updatedAccount
+          account: account
+        }));
+        */
     }
 }
 

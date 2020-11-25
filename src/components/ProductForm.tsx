@@ -25,8 +25,8 @@ export class ProductForm extends React.Component<ProductFormProps, ProductFormSt
 
   constructor(props: ProductFormProps){
     super(props);
-    this.state={
-      errors:[],
+    this.state = {
+      errors: [],
       product: { productName: "", ownerName: ""},
       loading: false,
       currentTransaction: ""
