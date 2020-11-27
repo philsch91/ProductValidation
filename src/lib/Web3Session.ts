@@ -6,7 +6,7 @@ import { Providers, provider, HttpProvider, WebsocketProvider, IpcProvider } fro
 import { Account } from './interfaces/account';
 import { AccountDelegate } from './interfaces/AccountDelegate';
 
-export class Web3Manager extends Web3 {
+export class Web3Session extends Web3 {
     private accountUpdateTimerId: number | null = null;
     private accountUpdateFlag: boolean = false;
     public accountDelegate: AccountDelegate | null = null;
@@ -248,11 +248,11 @@ export class Web3Manager extends Web3 {
             callback(error);
             return;
         }
-        
+
         if (callback) {
             callback(undefined, receipt);
         }
-        
+
         return receipt;
     }
 }

@@ -9,11 +9,12 @@ import {TransactionComponent} from './components/TransactionComponent';
 import {ProductComponent} from './components/ProductComponent';
 import {DealComponent} from './components/DealComponent';
 import {ProductValidationComponent} from "./components/ProductValidationComponent";
+import { WalletDiv } from './components/WalletDiv';
 
 import {Transaction} from './models/transaction';
 import {Deal} from './models/deal';
 
-import {Web3Manager} from './lib/Web3Manager';
+import {Web3Session} from './lib/Web3Session';
 import {Web3NodeManager} from './helpers/Web3NodeManager';
 import {Account} from './lib/interfaces/account';
 import {AccountDelegate} from './lib/interfaces/AccountDelegate';
@@ -66,6 +67,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
                         <li>{this.state.account == null ? "" : <NavLink to="/deals">Deals</NavLink>}</li>
                     </ul>
                     <div className="content">
+                        <WalletDiv account={this.state.account}/>
                         <Route exact path="/" component={HomeComponent}/>
                         <Route path="/login" render={props =>
                             <LoginComponent {...props}
@@ -200,7 +202,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
         return;
     }
 
-    public balanceDidChange(manager: Web3Manager, updatedAccount: Account) {
+    public balanceDidChange(session: Web3Session, updatedAccount: Account) {
         console.log(updatedAccount);
         /*
         var account: Account = this.state.account;

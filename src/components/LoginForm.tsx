@@ -39,6 +39,8 @@ export class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
     }
 
     private onChangeAddress(event: React.ChangeEvent<HTMLInputElement>) {
+        event.preventDefault();
+        console.log(event.target.value);
         /**
          * Method 1
          */
@@ -65,6 +67,8 @@ export class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
     };
 
     private onChangePrivateKey(event: React.ChangeEvent<HTMLInputElement>) {
+        //event.preventDefault();
+        //console.log(event.target.value);
         this.setState({
             privateKey: event.target.value
         });
@@ -72,7 +76,8 @@ export class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
         this.setState(
             previousState => ({
                 privateKey: event.target.value
-        })); */
+        }));
+        */
     }
 
     /**
@@ -103,7 +108,7 @@ export class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
          * https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1193.md
          */
 
-        if (web3Manager.currentProvider == null) {
+        if (web3Manager.currentProvider == null && this.state.address == "") {
             if ((window as any).ethereum) {
               web3Manager.setProvider((window as any).ethereum);
               (window as any).ethereum.enable();
@@ -162,10 +167,12 @@ export class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
     render() {
         return (
             <form onSubmit={this.connect}>
-            <input onChange={this.onChangeAddress} value={this.state.address} />
-            <input onChange={this.onChangePrivateKey} value={this.state.privateKey} />
+            <label htmlFor="node-address">Address:</label><br />
+            <input id="node-address" onChange={this.onChangeAddress} value={this.state.address} /><br />
+            <label htmlFor="private-key">Private Key:</label><br />
+            <input id="private-key" onChange={this.onChangePrivateKey} value={this.state.privateKey} /><br />
             <input type="button" onClick={this.props.onClickReadAccounts} value="Read Accounts" />
-            <input type="button" onClick={this.onClickPrivateKey} value="Save Private Key" />
+            <input type="button" onClick={this.onClickPrivateKey} value="Save Private Key" /><br />
             <button type="submit">Connect</button>
             </form>
         );

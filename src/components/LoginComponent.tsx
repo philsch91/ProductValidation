@@ -75,8 +75,13 @@ export class LoginComponent extends React.Component<Props, LoginComponentState> 
      * @param event: React.MouseEvent<HTMLInputElement, MouseEvent>
      */
     private onClickPrivateKey = (event: React.MouseEvent<HTMLInputElement, MouseEvent>) => {
-        console.log("LoginComponent.onSubmitPrivateKey")
-        console.log(this.state.account?.privateKey)
+        console.log("LoginComponent.onSubmitPrivateKey");
+        //console.log(this.state.account?.privateKey);
+        if (this.state.account == null) {
+            return;
+        }
+        console.log(this.state.account.privateKey);
+        this.props.onChangeAccount(this.state.account);
     }
 
     render(){
