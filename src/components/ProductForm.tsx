@@ -10,7 +10,7 @@ import {PRODUCT_CONTRACT_ADDRESS} from "../static/constants";
 //import '../../node_modules/bootstrap/dist/css/bootstrap.min.css';
 
 interface ProductFormProps {
-  account: string|null
+  account: string | null
   onDeploy: () => void;
 }
 
@@ -25,9 +25,9 @@ export class ProductForm extends React.Component<ProductFormProps, ProductFormSt
 
   constructor(props: ProductFormProps){
     super(props);
-    this.state={
-      errors:[],
-      product: { productName: "", ownerName: ""},
+    this.state = {
+      errors: [],
+      product: { productName: "", ownerName: "", creationDate: ""},
       loading: false,
       currentTransaction: ""
     }
@@ -74,7 +74,9 @@ export class ProductForm extends React.Component<ProductFormProps, ProductFormSt
     const contract = this.loadContract();
 
     this.setState({loading: true})
-    const contractReturn = await contract.methods.addProduct(product.ownerName, product.productName).send({from: this.props.account}).once('receipt', (receipt: any) => {
+    const contractReturn = await contract.methods.addProduct(product.ownerName, product.productName)
+    .send({from: this.props.account})
+    .once('receipt', (receipt: any) => {
       this.setState({
         loading: false
       })
@@ -108,14 +110,9 @@ export class ProductForm extends React.Component<ProductFormProps, ProductFormSt
                 </button>
                 <button onClick={this.props.onDeploy} className="btn btn-primary btn-block">Deploy</button>
               </form>
-              {this.state.currentTransaction != "" ?
-                  <a href={ropstenTransactionLink}>Link to transaction</a>
-                  :
-                  <p></p>
-              }
+              {this.state.currentTransaction != "" ? <a href={ropstenTransactionLink}>Link to transaction</a> : <p></p>}
             </div>
         }
-
         </div>
     );
   }

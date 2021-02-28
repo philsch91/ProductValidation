@@ -3,22 +3,23 @@ import {Contract} from "web3-eth-contract";
 import {Web3NodeManager} from "../helpers/Web3NodeManager";
 import * as productContractJson from "../static/Product.json";
 import {PRODUCT_CONTRACT_ADDRESS} from "../static/constants";
+import {Product} from "../models/product"
 
+/*
+interface ProductData {
+    ownerName: string | null,
+    productName: string | null,
+    creationDate: string | null
+} */
 
 interface ValidationProps {
     account: string | null;
     //id: number;
 }
 
-interface ProductData {
-    ownerName: string | null,
-    productName: string | null,
-    creationDate: string | null
-}
-
 interface ValidationState {
     idField: number;
-    product: ProductData;
+    product: Product;
     loading: boolean;
     isProduct: boolean;
     productNameField: string;
@@ -61,7 +62,7 @@ export class ProductValidationComponent extends React.Component<ValidationProps,
     }
 
     public async productValidation() {
-        console.log("ProductVerificationForm addProduct");
+        console.log("ProductValidationComponent productValidation");
 
         //console.log(this.state.idField);
         if (!Number.isInteger(this.state.idField)) {

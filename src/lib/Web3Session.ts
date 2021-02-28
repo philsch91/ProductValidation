@@ -2,11 +2,13 @@ import Web3 from 'web3';
 import { Contract, ContractOptions, ContractSendMethod, SendOptions, DeployOptions } from 'web3-eth-contract';
 import { Personal } from 'web3-eth-personal';
 import { Accounts } from 'web3-eth-accounts';
-import { Providers, provider, HttpProvider, WebsocketProvider, IpcProvider } from 'web3-core';
+import { Providers, provider, HttpProvider, WebsocketProvider, IpcProvider, SignedTransaction, TransactionReceipt } from 'web3-core';
 import { Account } from './interfaces/account';
 import { AccountDelegate } from './interfaces/AccountDelegate';
+import { Transaction } from '../models/transaction';
 
-export class Web3Manager extends Web3 {
+export class Web3Session extends Web3 {
+    private _account?: Account;
     private accountUpdateTimerId: number | null = null;
     private accountUpdateFlag: boolean = false;
     public accountDelegate: AccountDelegate | null = null;
@@ -14,6 +16,14 @@ export class Web3Manager extends Web3 {
     public constructor(){
         super();
         this.updateAccount = this.updateAccount.bind(this);
+    }
+
+    public set account(value : Account | undefined) {
+        this._account = value;
+    }
+
+    public get account(): Account | undefined {
+        return this._account;
     }
 
     public async getAccountsSync(): Promise<string[]> {
@@ -38,7 +48,7 @@ export class Web3Manager extends Web3 {
         accountList = new Array(addresses.length);
         var i = 0;
         
-        for(let key in addresses){
+        for (let key in addresses) {
             const address: string = addresses[key];
             console.log(address);
             //let account: Account = {id:"0", name:"test"};
@@ -65,7 +75,7 @@ export class Web3Manager extends Web3 {
             var accountList:Account[] = new Array(accounts.length);
             var i = 0;
             
-            for(let key in accounts){
+            for (let key in accounts) {
               const address: string = accounts[key];
               console.log(address);
               //let account: Account = {id:"0", name:"test"};
@@ -84,7 +94,7 @@ export class Web3Manager extends Web3 {
 
     public stopUpdatingAccount(): void {
         //this.accountUpdateFlag = false;
-        if(this.accountUpdateTimerId == null){
+        if (this.accountUpdateTimerId == null) {
             return;
         }
         clearInterval(this.accountUpdateTimerId);
@@ -92,14 +102,14 @@ export class Web3Manager extends Web3 {
 
     private async updateAccount(): Promise<void> {
         const address = this.eth.defaultAccount;
-        if(address == null){
+        if (address == null) {
             return;
         }
 
         const balance = await this.eth.getBalance(address);
         let account = {address: address, balance: balance} as Account;
             
-        if(this.accountDelegate == null){
+        if (this.accountDelegate == null) {
             return;
         }
         
@@ -108,7 +118,7 @@ export class Web3Manager extends Web3 {
 
     private async updateAccountWithTimeout(): Promise<void> {
         const address = this.eth.defaultAccount;
-        if(address == null){
+        if (address == null) {
             return;
         }
         
@@ -116,7 +126,7 @@ export class Web3Manager extends Web3 {
             const balance = await this.eth.getBalance(address);
             let account = {address: address, balance: balance} as Account;
             
-            if(this.accountDelegate == null){
+            if (this.accountDelegate == null) {
                 break;
             }
             //var func = function(){};
@@ -128,7 +138,7 @@ export class Web3Manager extends Web3 {
     public async unlockAccountSync(address: string, password: string, unlockduration: number, callback: (status: boolean) => void){
         //console.log(web3Manager.currentProvider);
         // https://docs.metamask.io/guide/ethereum-provider.html#ethereum-provider-api
-        if((this.currentProvider as any).isMetaMask == true) {
+        if ((this.currentProvider as any).isMetaMask == true) {
             //console.log("MetaMask provider detected");
             return;
         }
@@ -210,19 +220,31 @@ export class Web3Manager extends Web3 {
         return newContract;
     }
 
+    /**
+     * TODO: change gas to number
+     * @param transaction
+     * @param callback
+     */
     public async send(transaction: any, callback?: (error?: Error, receipt?: Object) => void): Promise<any> {
         var gas: Number = 0;
-        var receipt: Object;
+        var receipt: TransactionReceipt;
         
         try {
             //gas = await transaction.estimateGas({from: this.eth.defaultAccount});
             gas = await this.estimateGas(transaction);
-            receipt = await transaction.send({from: this.eth.defaultAccount, gas: gas});
+            //receipt = await transaction.send({from: this.eth.defaultAccount, gas: gas});
+            receipt = await this.eth.sendTransaction(transaction, (error: Error, hash: string) => {
+                console.log("hash: " + hash)
+                if (callback !== undefined && error !== undefined) {
+                    callback(error, undefined);
+                }
+                return;
+            })
         } catch (error) {
             if (!callback) {
                 throw error;
             }
-            callback(error);
+            callback(error, undefined);
             return;
         }
         
@@ -230,6 +252,74 @@ export class Web3Manager extends Web3 {
             callback(undefined, receipt);
         }
         
+        return receipt;
+    }
+
+    /**
+     *
+     * @param transaction
+     * @param callback
+     */
+    public async sendSigned(transaction: Transaction, callback?: (error?: Error, receipt?: TransactionReceipt) => void): Promise<TransactionReceipt | undefined> {
+        var gas: number = 0;
+        var receipt: TransactionReceipt;
+
+        if (transaction.from === undefined && this.defaultAccount !== null) {
+            transaction.from = this.defaultAccount
+        }
+
+        if (transaction.from === undefined && this._account !== undefined) {
+            transaction.from = this._account.address;
+        }
+
+        if (this._account?.privateKey === undefined) {
+            if (callback !== undefined) {
+                callback(Error("private key not set"));
+            }
+            return;
+        }
+
+        try {
+            //gas = await this.estimateGas(signedTransaction);
+            var gas = await this.eth.estimateGas(transaction, (error: Error, gas: number) => {
+                console.log("gas: " + gas)
+                if (callback !== undefined && error !== undefined) {
+                    callback(error, undefined);
+                }
+                return;
+            });
+
+            transaction.gas = gas;
+
+            //const pk: string = this._account.privateKey
+            var signedTransaction: SignedTransaction = await this.eth.accounts.signTransaction(transaction, this._account.privateKey);
+
+            if (signedTransaction.rawTransaction == null) {
+                if (callback !== undefined) {
+                    callback(Error("raw transaction is null"), undefined);
+                }
+                return;
+            }
+
+            receipt = await this.eth.sendSignedTransaction(signedTransaction.rawTransaction, (error: Error, hash: string) => {
+                console.log("hash: " + hash)
+                if (callback !== undefined && error !== undefined) {
+                    callback(error, undefined);
+                }
+                return;
+            })
+        } catch (error) {
+            if (!callback) {
+                throw error;
+            }
+            callback(error, undefined);
+            return;
+        }
+
+        if (callback) {
+            callback(undefined, receipt);
+        }
+
         return receipt;
     }
 
@@ -248,11 +338,11 @@ export class Web3Manager extends Web3 {
             callback(error);
             return;
         }
-        
+
         if (callback) {
             callback(undefined, receipt);
         }
-        
+
         return receipt;
     }
 }
