@@ -26,6 +26,7 @@ import {OWNER_ADDRESS} from './static/constants'
 import './App.css';
 
 interface State {
+    //account: string | null;
     account: Account | null;
     //accounts: string[];
     transactions: Transaction[];
@@ -36,7 +37,7 @@ interface State {
 class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
     //web3: Web3;
 
-    state = {
+    state: State = {
         account: null,
         //accounts: [],
         transactions: [],
@@ -62,7 +63,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
                         <li><NavLink exact to="/">Home</NavLink></li>
                         <li>{this.state.account != null ? <button onClick={() => this.logout()}>Logout</button> : <NavLink to="/login">Login</NavLink>}</li>
                         <li>{this.state.account == null ? "" : <NavLink to="/transactions">Transactions</NavLink>}</li>
-                        <li>{this.state.account == null || (OWNER_ADDRESS != this.state.account) ? "" : <NavLink to="/products">Add Products</NavLink>}</li>
+                        <li>{this.state.account == null || (OWNER_ADDRESS != this.state.account.address) ? "" : <NavLink to="/products">Add Products</NavLink>}</li>
                         <li>{this.state.account == null ? "" : <NavLink to="/validateProducts">Validate Products</NavLink>}</li>
                         <li>{this.state.account == null ? "" : <NavLink to="/deals">Deals</NavLink>}</li>
                     </ul>
@@ -82,12 +83,13 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
                         <Route path="/transactions" render={props => {
                             if (this.state.account == null) {
                                 return ( <Redirect to={{pathname: "/login"}} /> )
-                            } else {
-                                return (
-                                    <TransactionComponent {...props}
-                                      transactions={this.state.transactions}
-                                      onAddTransaction={this.onAddTransaction}/>)
                             }
+
+                            return (
+                                <TransactionComponent {...props}
+                                  transactions={this.state.transactions}
+                                  onAddTransaction={this.onAddTransaction}/>
+                            )
                         }
                         }/>
                         <Route path="/deals" render={props => {
@@ -107,7 +109,7 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
                             } else {
                                 return (
                                     <ProductComponent {...props}
-                                      account={this.state.account}
+                                      account={this.state.account.address}
                                       onDeploy={this.deployProduct}
                                       /*loading={this.state.loading} */ />)
                             }
@@ -116,11 +118,12 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
                         <Route path="/validateProducts" render={props => {
                             if (this.state.account == null) {
                                 return (<Redirect to={{pathname: "/login"}} /> )
-                            } else {
-                                return (
-                                    <ProductValidationComponent {...props}
-                                      account={this.state.account}/>)
                             }
+
+                            return (
+                                <ProductValidationComponent {...props}
+                                  account={this.state.account.address}/>
+                            )
                         }
                         }/>
                     </div>
@@ -187,6 +190,9 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
             account: newAccount
         }));
         const web3Manager = Web3NodeManager.getInstance();
+        if (this.state.account != null) {
+            web3Manager.account = this.state.account
+        }
         web3Manager.accountDelegate = this;
         web3Manager.stopUpdatingAccount();
         web3Manager.startUpdatingAccount();

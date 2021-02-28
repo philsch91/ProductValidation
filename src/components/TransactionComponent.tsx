@@ -1,5 +1,6 @@
 import React from 'react';
 import Web3 from 'web3';
+import { TransactionReceipt } from 'web3-core';
 import { TransactionConfig } from 'web3-eth';
 
 import { NewTransactionForm } from './NewTransactionForm';
@@ -54,18 +55,26 @@ export class TransactionComponent extends React.Component<Props, State> {
         var tx = {from: transaction.from, 
             to: transaction.to, 
             value: transaction.value} as TransactionConfig
-        
+        /*
         var promise = web3Manager.eth.sendTransaction(tx,function(error: Error, hash: string){
             if (error == undefined) {
                 console.log("transaction hash: " + hash);
                 return;
             }
+        }); */
+
+        var promise = web3Manager.sendSigned(tx, function(error?: Error, receipt?: TransactionReceipt) {
+            if (error !== undefined) {
+                console.log("error: " + error);
+                return;
+            }
+            console.log("receipt: " + receipt);
         });
 
         var transactionError: any | undefined = undefined;
 
-        promise.then((receipt: any) => {
-            console.log(receipt);
+        promise.then((receipt: TransactionReceipt | undefined) => {
+            console.log("receipt: " + receipt);
         }).catch((reason: any) => {
             console.log("error");
             console.log(reason);
