@@ -10,6 +10,12 @@
 6. `npm install --save @types/react-router-dom`
 7. `npm install axios`
 
+### Update Dependencies
+- `npm outdated`
+- `npm update`
+- `npm update "react" "react-dom"`
+- `npm install <packagename>@latest [<packagename2>@latest]`
+
 ### Truffle Setup
 1. `npm install -g truffle`
 2. `npm install --save @types/jest`
