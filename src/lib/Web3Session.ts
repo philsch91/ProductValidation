@@ -122,7 +122,7 @@ export class Web3Session extends Web3 {
             return;
         }
         
-        while(this.accountUpdateFlag){
+        while (this.accountUpdateFlag) {
             const balance = await this.eth.getBalance(address);
             let account = {address: address, balance: balance} as Account;
             
@@ -282,7 +282,7 @@ export class Web3Session extends Web3 {
         try {
             //gas = await this.estimateGas(signedTransaction);
             var gas = await this.eth.estimateGas(transaction, (error: Error, gas: number) => {
-                console.log("gas: " + gas)
+                //console.log("sengSigned gas: " + gas)  //21000
                 if (callback !== undefined && error !== undefined) {
                     callback(error, undefined);
                 }
@@ -290,6 +290,8 @@ export class Web3Session extends Web3 {
             });
 
             transaction.gas = gas;
+            console.log("sendSigned transaction.gas: " + transaction.gas);
+            console.log("sendSigned transaction.gasPrice: " + transaction.gasPrice);
 
             //const pk: string = this._account.privateKey
             var signedTransaction: SignedTransaction = await this.eth.accounts.signTransaction(transaction, this._account.privateKey);

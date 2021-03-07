@@ -1,5 +1,31 @@
 # ProductValidation
 
+## Introduction
+
+- Maximum Gas per Block = 3141592
+- Total Cost of Transaction = Gas Limit * Gas Price
+- Default (minimum) Gas Limit = 21000
+- Default Gas Price = 20 GWei = 20.000.000.000 (2e10) Wei = 0,00000002 (2e-8) Ether
+- Default Transaction Cost = 21000 * 20 GWei = 0,00042 Ether
+
+#### Gas Limit
+
+Additional, or unused, gas is refunded to your account at the end of the transaction.
+
+##### Normal Transactions
+
+For example, if the gas limit for the transaction, as the maximum gas provided, is set to 100000, the amount of gas returned to the account is determined by the quotation: Gas = 100000 - 21000 * x
+
+##### Contract Calls
+
+Beware: If Ether is sent to a contract and the transaction fails, the entire gas limit is charged.
+
+#### Gas Price
+
+- 40 GWei Gas Price will almost always be mined in the next blockchain block.
+- 20 Gwei will usually be mined within the next few blocks.
+- 10 Gwei will be calculated within the next few minutes.
+
 ### Setup
 
 1. `npm install -g typescript`

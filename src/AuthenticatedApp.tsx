@@ -95,24 +95,26 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
                         <Route path="/deals" render={props => {
                             if (this.state.account == null) {
                                 return ( <Redirect to={{pathname: "/login"}} /> )
-                            } else {
-                                return (
-                                    <DealComponent {...props}
-                                      deals={this.state.deals}
-                                      onAddDeal={this.onAddDeal}/>)
                             }
+
+                            return (
+                                <DealComponent {...props}
+                                  deals={this.state.deals}
+                                  onAddDeal={this.onAddDeal}/>
+                            )
                         }
                         }/>
                         <Route path="/products" render={props => {
                             if (this.state.account == null) {
                                 return ( <Redirect to={{pathname: "/login"}} /> )
-                            } else {
-                                return (
-                                    <ProductComponent {...props}
-                                      account={this.state.account.address}
-                                      onDeploy={this.deployProduct}
-                                      /*loading={this.state.loading} */ />)
                             }
+
+                            return (
+                                <ProductComponent {...props}
+                                  account={this.state.account.address}
+                                  onDeploy={this.deployProduct}
+                                  /*loading={this.state.loading} */ />
+                            )
                         }
                         }/>
                         <Route path="/validateProducts" render={props => {
@@ -210,14 +212,15 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
 
     public balanceDidChange(session: Web3Session, updatedAccount: Account) {
         console.log(updatedAccount);
-        /*
-        var account: Account = this.state.account;
+        var account: Account | null = this.state.account;
+        if (account === null || account === undefined) {
+            return;
+        }
         account.balance = updatedAccount.balance;
         this.setState(previousState => ({
           //account: updatedAccount
           account: account
         }));
-        */
     }
 }
 
