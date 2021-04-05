@@ -35,6 +35,10 @@ Beware: If Ether is sent to a contract and the transaction fails, the entire gas
 5. `npm install --save react-router-dom`
 6. `npm install --save @types/react-router-dom`
 7. `npm install axios`
+8. `npm install sockjs-client`
+9. `npm install --save @types/sockjs-client`
+10. `npm install stompjs`
+11. `npm install --save @types/stompjs`
 
 ### Update Dependencies
 - `npm outdated`
