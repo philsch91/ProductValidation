@@ -61,7 +61,7 @@ Beware: If Ether is sent to a contract and the transaction fails, the entire gas
 
 ### Solc-js Setup
 1. `npm install -g solc` [GitHub Solc-js](https://github.com/ethereum/solc-js)
-2. Check Solidity compiler version with `solc-js --version`
+2. Check Solidity compiler version with `solcjs --version`
 
 ### Compile and Use Solidity Smart Contracts
 1. Compile bytecode and Application Binary Interface (ABI) for your contract with `solcjs --bin --abi Contract.sol`

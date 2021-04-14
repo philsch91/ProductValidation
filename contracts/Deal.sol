@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0
+
 pragma solidity >=0.6.1;
 //pragma solidity ^0.5.11;
 
@@ -127,7 +129,7 @@ contract Deal {
 
   // The function to send the price to pay for order
   // Just the owner can call this function
-  // requires free
+  // requires fee
   function sendPrice(uint orderno, uint price, int8 ttype) public payable {
     // Only the owner can use this function
     require(msg.sender == owner);
@@ -171,7 +173,7 @@ contract Deal {
 
     orders[orderno].safepay = msg.value;
 
-    emit SafepaySent(msg.sender, orderno, msg.value, now);
+    emit SafepaySent(msg.sender, orderno, msg.value, block.timestamp);
   }
 
   // The function to send the invoice data
@@ -227,12 +229,18 @@ contract Deal {
 
     // Payout the Order to the seller
     //owner.transfer(_order.safepay);
-    address payable sellerAddress = address(uint160(owner));
+    //Solidity 0.6
+    address payable sellerAddress = payable(owner);
+    //Solidity 0.5
+    //address payable sellerAddress = address(uint160(owner));
     sellerAddress.transfer(_order.safepay);
 
     // Payout the Shipment to the courier
     //_order.shipment.courier.transfer(_order.shipment.safepay);
-    address payable courierAddress = address(uint160(_order.shipment.courier));
+    //Solidity 0.6
+    address payable courierAddress = payable(_order.shipment.courier);
+    //Solidity 0.5
+    //address payable courierAddress = address(uint160(_order.shipment.courier));
     courierAddress.transfer(_order.shipment.safepay);
   }
 

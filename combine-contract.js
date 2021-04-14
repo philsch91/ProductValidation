@@ -16,4 +16,4 @@ contract.bin = strBin;
 contract.abi = abi;
 
 let strContract = JSON.stringify(contract);
-fs.writeFileSync('DealContract.json',strContract);
+fs.writeFileSync('ProductContract.json',strContract);
