@@ -35,8 +35,8 @@ contract("ProductSale", function(accounts){
     order_price = 100000;
     shipment_price = 50000;
     price = order_price + shipment_price;
-    goods = "Banana";
-    quantity = 200;
+    goods = "Wine";
+    quantity = 300;
   });
 
   it("should the seller account owns the contract", function(){
@@ -46,7 +46,7 @@ contract("ProductSale", function(accounts){
     return ProductSale.new(buyer, {from: seller}).then(function(instance){
       sale = instance;
 
-      return sale.owner();
+      return sale.getOwner();
     }).then(function(owner){
       assert.equal(seller, owner, "The seller account did not owns the contract");
     });

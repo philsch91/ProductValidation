@@ -10,7 +10,7 @@ interface IProduct {
 }
 
 contract ProductSale {
-    address public owner;
+    address private owner;
     address public buyerAddr;
     address public productValidationContractAddress;
     IProduct productValidationContract;
@@ -58,9 +58,13 @@ contract ProductSale {
     mapping (uint => Order) orders;
     // The mapping to store invoices
     mapping (uint => Invoice) invoices;
+    // Mapping to store buyers
+    mapping(uint256 => Buyer) buyers;
+    //uint256[] buyerList;
 
     uint orderseq;
     uint invoiceseq;
+    //uint256 buyerseq;
 
     // Event triggered for every registered buyer
     event BuyerRegistered(address buyer, string name);
@@ -97,12 +101,16 @@ contract ProductSale {
         buyerAddr = address(_buyerAddr);
 
         //casting from address payable to address
-        //address payable addr1 = msg.sender;
-        //address _address = address(addr1);
+        //address payable _addr = msg.sender;
+        //address addr = address(_addr);
 
         //casting from address to address payable
-        //address addr = msg.sender;
-        //address payable _address = address(uint160(addr));
+        //address _addr = msg.sender;
+        //address payable addr = address(uint160(_addr));
+    }
+
+    function getOwner() public view returns (address) {
+        return owner;
     }
   
     function setProductValidationContractAddress(address contractAddress) public onlyOwner {
@@ -113,6 +121,39 @@ contract ProductSale {
         return productValidationContractAddress;
     }
 
+    function isBuyerExisting(uint _orderno) public view returns (bool res) {
+        return buyers[_orderno].init;
+        //return orders[_orderno].buyer.init;
+    }
+
+    function addBuyer(address _buyerAddress) private {
+        if (isBuyerExisting(orderseq)) {
+            revert();
+        }
+        buyers[orderseq] = Buyer(_buyerAddress, "", true);
+        //buyerseq++;
+    }
+
+    function addBuyer(address _buyerAddress, string memory _buyerName) private {
+        if (isBuyerExisting(orderseq)) {
+            revert();
+        }
+        buyers[orderseq] = Buyer(_buyerAddress, _buyerName, true);
+        //buyerseq++;
+    }
+
+    function getBuyer(uint _orderno) public view onlyOwner returns (
+        address buyerAddress,
+        string memory buyerName,
+        bool init) {
+
+        if (!isBuyerExisting(_orderno)) {
+            revert();
+        }
+
+        return (buyers[_orderno].addr, buyers[_orderno].name, buyers[_orderno].init);
+    }
+
     // The function to send purchase orders
     // requires fee
     // Payable functions returns just the transaction object, with no custom field.
@@ -120,17 +161,20 @@ contract ProductSale {
     //function sendOrder(string memory goods, uint quantity) public payable {
     function sendOrder(string memory productName, uint quantity) public payable {
         // Accept orders just from buyer
-        require(msg.sender == buyerAddr);
+        //require(msg.sender == buyerAddr);
+
+        // Instantiate product
+        ProductInformation memory productInfo = ProductInformation(address(0), productName, block.timestamp);
 
         // Increment the order sequence
+        // start with 1
         orderseq++;
-
-        // Create product
-        ProductInformation memory productInfo = ProductInformation(address(0), productName, block.timestamp);
 
         // Create the order register
         //orders[orderseq] = Order(goods, quantity, orderseq, 0, 0, Shipment(address(0), 0, 0, address(0), 0, 0, false), true);
         orders[orderseq] = Order(productInfo, quantity, orderseq, 0, 0, Shipment(address(0), 0, 0, address(0), 0, 0, false), true);
+
+        addBuyer(msg.sender);
 
         // Trigger the event
         emit OrderSent(msg.sender, productName, quantity, orderseq);
@@ -148,9 +192,11 @@ contract ProductSale {
         uint delivey_safepay) {
         // Validate the order number
         require(orders[number].init);
+        require(buyers[number].init);
 
         // Return the order data
-        return(buyerAddr,
+        //buyerAddr
+        return(buyers[number].addr,
             orders[number].product.productName,
             orders[number].quantity,
             orders[number].price,
@@ -177,14 +223,15 @@ contract ProductSale {
         if (ttype == 1) { // Price for Order
             // Update the order price
             orders[orderno].price = price;
-        } else {// Price for Shipment
+        } else { // Price for Shipment
             // Update the shipment price
             orders[orderno].shipment.price = price;
             orders[orderno].shipment.init = true;
         }
 
         // Trigger the event
-        emit PriceSent(buyerAddr, orderno, price, ttype);
+        //buyerAddr
+        emit PriceSent(buyers[orderno].addr, orderno, price, ttype);
     }
 
     // The function to send the value of order's price
@@ -195,7 +242,8 @@ contract ProductSale {
         require(orders[orderno].init);
 
         // Just the buyer can make safepay
-        require(buyerAddr == msg.sender);
+        //require(buyerAddr == msg.sender);
+        require(buyers[orderno].addr == msg.sender);
 
         // The order's value plus the shipment value must equal to msg.value
         require((orders[orderno].price + orders[orderno].shipment.price) == msg.value);
@@ -214,6 +262,11 @@ contract ProductSale {
         // Just the seller can send the invoice
         require(owner == msg.sender);
 
+        // Buyer must be set
+        require(buyers[orderno].init);
+
+        // Increment the invoice sequence
+        // start with 1
         invoiceseq++;
 
         // Create then Invoice instance and store it
@@ -224,7 +277,8 @@ contract ProductSale {
         orders[orderno].shipment.courier = courier;
 
         // Trigger the event
-        emit InvoiceSent(buyerAddr, invoiceseq, orderno, delivery_date, courier);
+        //buyerAddr
+        emit InvoiceSent(buyers[orderno].addr, invoiceseq, orderno, delivery_date, courier);
     }
 
     // The function to get the sent invoice
@@ -239,8 +293,10 @@ contract ProductSale {
 
         Invoice storage _invoice = invoices[invoiceno];
         Order storage _order = orders[_invoice.orderno];
+        Buyer storage _buyer = buyers[_order.number];
 
-        return (buyerAddr, _order.number, _order.shipment.date, _order.shipment.courier);
+        //buyerAddr
+        return (_buyer.addr, _order.number, _order.shipment.date, _order.shipment.courier);
     }
 
     // The function to mark an order as delivered

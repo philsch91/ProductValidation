@@ -77,13 +77,13 @@ contract Deal {
     owner = msg.sender;
     buyerAddr = address(_buyerAddr);
 
-    //casting from address paylable to address
-    //address payable addr1 = msg.sender;
-    //address _address = address(addr1);
+    //casting from address payable to address
+    //address payable _addr = msg.sender;
+    //address addr = address(_addr);
 
     //casting from address to address payable
-    //address addr = msg.sender;
-    //address payable _address = address(uint160(addr));
+    //address _addr = msg.sender;
+    //address payable addr = address(uint160(_addr));
   }
 
   // The function to send purchase orders
