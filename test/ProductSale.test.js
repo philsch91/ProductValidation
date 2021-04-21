@@ -43,12 +43,12 @@ contract("ProductSale", function(accounts){
     
     var sale;
 
-    return ProductSale.new(buyer, {from: seller}).then(function(instance){
+    return ProductSale.new({from: seller}).then(function(instance){
       sale = instance;
 
       return sale.getOwner();
     }).then(function(owner){
-      assert.equal(seller, owner, "The seller account did not owns the contract");
+      assert.equal(seller, owner, "The seller account did not own the contract");
     });
     
   });
@@ -57,12 +57,27 @@ contract("ProductSale", function(accounts){
 
     var sale;
 
-    return ProductSale.new(buyer, {from: seller}).then(function(instance){
+    return ProductSale.new({from: seller}).then(function(instance){
       sale = instance;
 
-      return sale.buyerAddr();
-    }).then(function(buyer){
-      assert.equal(accounts[1], buyer, "The second account was not the buyer");
+      return sale.sendOrder(goods, quantity, {from: buyer});
+    }).then(function(transaction){
+      return new Promise(function(resolve, reject){
+        return web3.eth.getTransaction(transaction.tx, function(err, tx){
+          if(err){
+            reject(err);
+          }
+          resolve(tx);
+        });
+      });
+    }).then(function(tx){
+      console.log(tx.gasPrice.toString());
+    }).then(function(){
+      //query getTransactionReceipt
+    }).then(function(){
+      return sale.queryOrder(orderno);
+    }).then(function(order){
+      assert.equal(accounts[1], order.buyer, "The second account was not the buyer");
     });
 
   });
@@ -71,7 +86,7 @@ contract("ProductSale", function(accounts){
 
     var sale;
 
-    return ProductSale.new(buyer, {from: seller}).then(function(instance){
+    return ProductSale.new({from: seller}).then(function(instance){
       sale = instance;
 
       return sale.sendOrder(goods, quantity, {from: buyer});
@@ -100,14 +115,14 @@ contract("ProductSale", function(accounts){
 
     var sale;
 
-    return ProductSale.new(buyer, {from: seller}).then(function(instance){
+    return ProductSale.new({from: seller}).then(function(instance){
       sale = instance;
 
       return sale.sendOrder(goods, quantity, {from: buyer});
     }).then(function(){
       return sale.sendPrice(orderno, shipment_price, TYPE_SHIPMENT, {from: seller});
     }).then(function(){
-      return sale.queryOrder(orderno); 
+      return sale.queryOrder(orderno);
     }).then(function(order){
       assert.equal(order[ORDER_SHIPMENT_PRICE].toString(), shipment_price); 
     });
@@ -118,7 +133,7 @@ contract("ProductSale", function(accounts){
 
     var sale;
 
-    return ProductSale.new(buyer, {from: seller}).then(function(instance){
+    return ProductSale.new({from: seller}).then(function(instance){
       sale = instance;
 
       return sale.sendOrder(goods, quantity, {from: buyer});
@@ -136,7 +151,7 @@ contract("ProductSale", function(accounts){
     
     var sale;
 
-    return ProductSale.new(buyer, {from: seller}).then(function(instance){
+    return ProductSale.new({from: seller}).then(function(instance){
       sale = instance;
       
       return sale.sendOrder(goods, quantity, {from: buyer});
@@ -157,7 +172,7 @@ contract("ProductSale", function(accounts){
     
     var sale;
 
-    return ProductSale.new(buyer, {from: seller}).then(function(instance){
+    return ProductSale.new({from: seller}).then(function(instance){
       sale = instance;
       
       return sale.sendOrder(goods, quantity, {from: buyer});
@@ -185,7 +200,7 @@ contract("ProductSale", function(accounts){
     
     var sale;
 
-    return ProductSale.new(buyer, {from: seller}).then(function(instance){
+    return ProductSale.new({from: seller}).then(function(instance){
       sale = instance;
 
       return sale.sendOrder(goods, quantity, {from: buyer});
@@ -205,7 +220,7 @@ contract("ProductSale", function(accounts){
     
     var sale;
 
-    return ProductSale.new(buyer, {from: seller}).then(function(instance){
+    return ProductSale.new({from: seller}).then(function(instance){
       sale = instance;
 
       return sale.sendOrder(goods, quantity, {from: buyer});
@@ -224,7 +239,7 @@ contract("ProductSale", function(accounts){
     
     var sale;
 
-    return ProductSale.new(buyer, {from: seller}).then(function(instance){
+    return ProductSale.new({from: seller}).then(function(instance){
       sale = instance;
 
       return sale.sendOrder(goods, quantity, {from: buyer});
@@ -243,7 +258,7 @@ contract("ProductSale", function(accounts){
     
     var sale;
 
-    return ProductSale.new(buyer, {from: seller}).then(function(instance){
+    return ProductSale.new({from: seller}).then(function(instance){
       sale = instance;
       
       return sale.sendOrder(goods, quantity, {from: buyer});
@@ -277,16 +292,16 @@ contract("ProductSale", function(accounts){
 
     return Product.new({from: seller}).then(function(instance){
       product = instance;
-      return ProductSale.new(buyer, {from: seller}).then(function(instance){
+      return ProductSale.new({from: seller}).then(function(instance){
         sale = instance;
       }).then(function(){
         sale.setProductValidationContractAddress(product.address, {from: seller});
       }).then(function(){
-	return sale.getProductValidationContractAddress();
+	      return sale.getProductValidationContractAddress();
       }).then(function(contractAddress){
-	console.log("product.address: " + product.address);
-	//console.log("sale.address: " + sale.address);
-	console.log("contractAddress: " + contractAddress);
+        console.log("product.address: " + product.address);
+        //console.log("sale.address: " + sale.address);
+        console.log("contractAddress: " + contractAddress);
         assert.equal(contractAddress, product.address);
       });
     });

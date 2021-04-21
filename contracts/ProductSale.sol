@@ -11,7 +11,6 @@ interface IProduct {
 
 contract ProductSale {
     address private owner;
-    address public buyerAddr;
     address public productValidationContractAddress;
     IProduct productValidationContract;
 
@@ -32,13 +31,14 @@ contract ProductSale {
     }
 
     struct Order {
-        //string goods;
+        //string productName;
         ProductInformation product;
         uint quantity;
         uint number;
         uint price;
         uint safepay;
         Shipment shipment;
+        address buyer;
         bool init;
     }
   
@@ -59,8 +59,8 @@ contract ProductSale {
     // The mapping to store invoices
     mapping (uint => Invoice) invoices;
     // Mapping to store buyers
-    mapping(uint256 => Buyer) buyers;
-    //uint256[] buyerList;
+    mapping(address => Buyer) buyers;
+    //address[] buyerList;
 
     uint orderseq;
     uint invoiceseq;
@@ -95,10 +95,9 @@ contract ProductSale {
     }
 
     // The smart contract's constructor
-    constructor(address _buyerAddr) public payable {
+    constructor() public payable {
         // The seller is the contract's owner
         owner = msg.sender;
-        buyerAddr = address(_buyerAddr);
 
         //casting from address payable to address
         //address payable _addr = msg.sender;
@@ -121,37 +120,37 @@ contract ProductSale {
         return productValidationContractAddress;
     }
 
-    function isBuyerExisting(uint _orderno) public view returns (bool res) {
-        return buyers[_orderno].init;
+    function isBuyer(address _address) public view returns (bool res) {
+        return buyers[_address].init;
         //return orders[_orderno].buyer.init;
     }
 
     function addBuyer(address _buyerAddress) private {
-        if (isBuyerExisting(orderseq)) {
+        if (isBuyer(_buyerAddress)) {
             revert();
         }
-        buyers[orderseq] = Buyer(_buyerAddress, "", true);
+        buyers[_buyerAddress] = Buyer(_buyerAddress, "", true);
         //buyerseq++;
     }
 
     function addBuyer(address _buyerAddress, string memory _buyerName) private {
-        if (isBuyerExisting(orderseq)) {
+        if (isBuyer(_buyerAddress)) {
             revert();
         }
-        buyers[orderseq] = Buyer(_buyerAddress, _buyerName, true);
+        buyers[_buyerAddress] = Buyer(_buyerAddress, _buyerName, true);
         //buyerseq++;
     }
 
-    function getBuyer(uint _orderno) public view onlyOwner returns (
+    function getBuyer(address _buyerAddress) public view onlyOwner returns (
         address buyerAddress,
         string memory buyerName,
         bool init) {
 
-        if (!isBuyerExisting(_orderno)) {
+        if (!isBuyer(_buyerAddress)) {
             revert();
         }
 
-        return (buyers[_orderno].addr, buyers[_orderno].name, buyers[_orderno].init);
+        return (buyers[_buyerAddress].addr, buyers[_buyerAddress].name, buyers[_buyerAddress].init);
     }
 
     // The function to send purchase orders
@@ -166,13 +165,15 @@ contract ProductSale {
         // Instantiate product
         ProductInformation memory productInfo = ProductInformation(address(0), productName, block.timestamp);
 
+        Shipment memory shipment = Shipment(address(0), 0, 0, address(0), 0, 0, false);
+
         // Increment the order sequence
         // start with 1
         orderseq++;
 
         // Create the order register
         //orders[orderseq] = Order(goods, quantity, orderseq, 0, 0, Shipment(address(0), 0, 0, address(0), 0, 0, false), true);
-        orders[orderseq] = Order(productInfo, quantity, orderseq, 0, 0, Shipment(address(0), 0, 0, address(0), 0, 0, false), true);
+        orders[orderseq] = Order(productInfo, quantity, orderseq, 0, 0, shipment, msg.sender, true);
 
         addBuyer(msg.sender);
 
@@ -182,7 +183,7 @@ contract ProductSale {
 
     // The function to query orders by number
     // Constant functions returns custom fields
-    function queryOrder(uint number) public view returns (
+    function queryOrder(uint orderno) public view returns (
         address buyer,
         string memory productName,
         uint quantity,
@@ -191,18 +192,21 @@ contract ProductSale {
         uint delivery_price,
         uint delivey_safepay) {
         // Validate the order number
-        require(orders[number].init);
-        require(buyers[number].init);
+        require(orders[orderno].init);
+
+        // CompilerError: Stack too deep, try removing local variables
+        //address buyerAddress = orders[orderno].buyer;
+        //require(buyers[buyerAddress].init);
+        require(buyers[orders[orderno].buyer].init);
 
         // Return the order data
-        //buyerAddr
-        return(buyers[number].addr,
-            orders[number].product.productName,
-            orders[number].quantity,
-            orders[number].price,
-            orders[number].safepay,
-            orders[number].shipment.price,
-            orders[number].shipment.safepay);
+        return(orders[orderno].buyer,
+            orders[orderno].product.productName,
+            orders[orderno].quantity,
+            orders[orderno].price,
+            orders[orderno].safepay,
+            orders[orderno].shipment.price,
+            orders[orderno].shipment.safepay);
     }
 
     // The function to send the price to pay for order
@@ -230,8 +234,8 @@ contract ProductSale {
         }
 
         // Trigger the event
-        //buyerAddr
-        emit PriceSent(buyers[orderno].addr, orderno, price, ttype);
+        //emit PriceSent(buyers[orders[orderno].buyer].addr, orderno, price, ttype);
+        emit PriceSent(orders[orderno].buyer, orderno, price, ttype);
     }
 
     // The function to send the value of order's price
@@ -243,7 +247,7 @@ contract ProductSale {
 
         // Just the buyer can make safepay
         //require(buyerAddr == msg.sender);
-        require(buyers[orderno].addr == msg.sender);
+        require(orders[orderno].buyer == msg.sender);
 
         // The order's value plus the shipment value must equal to msg.value
         require((orders[orderno].price + orders[orderno].shipment.price) == msg.value);
@@ -263,7 +267,8 @@ contract ProductSale {
         require(owner == msg.sender);
 
         // Buyer must be set
-        require(buyers[orderno].init);
+        address buyerAddress = orders[orderno].buyer;
+        require(buyers[buyerAddress].init);
 
         // Increment the invoice sequence
         // start with 1
@@ -277,8 +282,8 @@ contract ProductSale {
         orders[orderno].shipment.courier = courier;
 
         // Trigger the event
-        //buyerAddr
-        emit InvoiceSent(buyers[orderno].addr, invoiceseq, orderno, delivery_date, courier);
+        //emit InvoiceSent(orders[orderno].buyer, invoiceseq, orderno, delivery_date, courier);
+        emit InvoiceSent(buyers[buyerAddress].addr, invoiceseq, orderno, delivery_date, courier);
     }
 
     // The function to get the sent invoice
@@ -293,9 +298,8 @@ contract ProductSale {
 
         Invoice storage _invoice = invoices[invoiceno];
         Order storage _order = orders[_invoice.orderno];
-        Buyer storage _buyer = buyers[_order.number];
+        Buyer storage _buyer = buyers[_order.buyer];
 
-        //buyerAddr
         return (_buyer.addr, _order.number, _order.shipment.date, _order.shipment.courier);
     }
 
@@ -310,7 +314,7 @@ contract ProductSale {
         // Just the courier can call this function
         require(_order.shipment.courier == msg.sender);
 
-        emit OrderDelivered(buyerAddr, invoiceno, _order.number, timestamp, _order.shipment.courier);
+        emit OrderDelivered(_order.buyer, invoiceno, _order.number, timestamp, _order.shipment.courier);
 
         // Payout the Order to the seller
         //owner.transfer(_order.safepay);
@@ -328,12 +332,12 @@ contract ProductSale {
         //address payable courierAddress = address(uint160(_order.shipment.courier));
         courierAddress.transfer(_order.shipment.safepay);
 
-        _order.product.productOwnerName = buyerAddr;
+        _order.product.productOwnerName = _order.buyer;
         if (productValidationContractAddress == address(0)) {
             return;
         }
 
-        string memory _productOwnerName = toAsciiString(buyerAddr);
+        string memory _productOwnerName = toAsciiString(_order.buyer);
         productValidationContract = IProduct(productValidationContractAddress);
         productValidationContract.addProduct(_productOwnerName, _order.product.productName);
     }
