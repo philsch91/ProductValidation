@@ -6,6 +6,7 @@ import {PRODUCT_CONTRACT_ADDRESS} from "../static/constants";
 import {Product} from "../models/product"
 import SockJS from 'sockjs-client';
 import * as Stomp from 'stompjs';
+//import '../extensions/sockjs-client/abstract-xhr';
 
 /*
 interface ProductData {
