@@ -33,7 +33,7 @@ import * as dealContract from './static/DealContract.json';
 import deal from './static/DealContract.json';
 import * as productContract from './static/ProductContract.json'
 
-import './App.css';
+//import './App.css';
 
 interface State {
   address: String;

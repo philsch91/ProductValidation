@@ -19,15 +19,16 @@ class App extends React.Component<{}> {
   render() {
     //let app 
     return (
-      <AuthenticatedApp />
-      /*
-      <AuthConsumer> 
-        {({ isAuth }) => {
-        //=> ({
-          
+      //<AuthenticatedApp />
+      // /*
+      <AuthProvider>
+      <AuthConsumer>
+      {({ isAuth, username, token, login, logout }) => {
+          // => ({
           //isAuth === true ? <AuthenticatedApp /> : <UnauthenticatedApp />
           //token !== '' ? <AuthenticatedApp /> : <UnauthenticatedApp />
-        
+          console.log("isAuth " + isAuth);
+          console.log("username " + username);
           if (isAuth === true) {
             return <AuthenticatedApp />
             
@@ -36,13 +37,14 @@ class App extends React.Component<{}> {
             //</React.Suspense>
           }
 
-          return <AuthenticatedApp />
-          //return <UnauthenticatedApp /> 
+          //return <AuthenticatedApp />
+          return <UnauthenticatedApp />
         }
         //)}
-        }
+      }
       </AuthConsumer>
-      */
+      </AuthProvider>
+      // */
     );
   }
 }

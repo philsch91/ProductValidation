@@ -1,11 +1,12 @@
-import React from 'react';
-import { AuthProvider } from './AuthProvider';
+import React, { FormEvent } from 'react';
+//import { AuthProvider } from './AuthProvider';
 
 export type AuthContextProps = {
   isAuth: boolean;
   username?: string;
   token?: string;
-  login?: () => void;
+  changeUsername?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  login?: (event: React.FormEvent<HTMLFormElement>) => void;
   logout?: () => void;
 };
 

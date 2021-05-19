@@ -3,18 +3,15 @@ import { BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
 import { AuthComponent } from './components/AuthComponent';
 import { SignupComponent } from './components/SignupComponent';
 
-import '../node_modules/bootstrap/dist/css/bootstrap.min.css';
-import './UnauthenticatedApp.css';
-
 class UnauthenticatedApp extends React.Component<{}> {
 
   render() {
     return (
       <Router>
-      <div className="App">
+      <div className="UnauthenticatedApp" style={{backgroundColor: 'white'}}>
       <nav className="navbar navbar-expand-lg navbar-light fixed-top">
           <div className="container">
-            <Link className="navbar-brand" to={"/sign-in"}>Login and Signup Template</Link>
+            {/*<Link className="navbar-brand" to={"/sign-in"}>Login and Signup Template</Link>*/}
             <div className="collapse navbar-collapse" id="navbarTogglerDemo02">
               <ul className="navbar-nav ml-auto">
                 <li className="nav-item">

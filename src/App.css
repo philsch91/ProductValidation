@@ -7,6 +7,18 @@
   pointer-events: none;
 }
 
+.UnauthenticatedApp {
+  background-color: white;
+}
+
+.background-blue {
+  background-color: #3489EB;
+}
+
+.background-white {
+  background-color: white;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
     animation: App-logo-spin infinite 20s linear;
