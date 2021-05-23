@@ -16,6 +16,7 @@ interface Props {
 interface LoginComponentState {
     account: Account | null;
     accounts: Account[];
+    //accounts?: Account[];
     errors: Error[];
 }
 
@@ -44,10 +45,13 @@ export class LoginComponent extends React.Component<Props, LoginComponentState> 
         const web3Manager = Web3NodeManager.getInstance();
 
         //web3Manager.readAccounts((error: Error, accounts: Account[]) => {
-        web3Manager.readAccountsAndBalances((error: Error, accounts: Account[]) => {
-          this.setState(previousState => ({
-            accounts: accounts
-          }));
+        web3Manager.readAccountsAndBalances((error?: Error, accounts?: Account[]) => {
+            if (typeof accounts === "undefined") {
+                return;
+            }
+            this.setState(previousState => ({
+                accounts: accounts
+            }));
         });
     }
 

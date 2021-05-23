@@ -26,20 +26,29 @@ export class Web3Session extends Web3 {
         return this._account;
     }
 
-    public async getAccountsSync(): Promise<string[]> {
+    public async getAccounts(): Promise<string[]> {
         const addresses: string[] = await this.eth.getAccounts();
         return addresses;
     }
 
-    public async readAccountsAndBalances(callback: (error: Error, accounts: Account[]) => void){
-        var error: Error = new Error();
+    /**
+     * callback: (error: Error | null, accounts: Account[] | null)
+     * callback with optionals
+     * callback: (error?: Error, accounts?: Account[])
+     * @param callback
+     * @returns Promise<Account[] | undefined>
+     */
+    public async readAccountsAndBalances(callback: (error?: Error, accounts?: Account[]) => void) : Promise<Account[] | undefined>{
+        //var error: Error | null = null;
+        var error: Error | undefined = undefined;
         var addresses: string[];
         var accountList: Account[] = new Array();
         
         try {
-            addresses = await this.getAccountsSync();    
+            addresses = await this.getAccounts();
         } catch (error) {
-            callback(error, accountList);
+            //callback(error, accountList);
+            callback(error);
             return;
         }
         
@@ -49,16 +58,23 @@ export class Web3Session extends Web3 {
         var i = 0;
         
         for (let key in addresses) {
-            const address: string = addresses[key];
+            //const address: string = addresses[key];
+            let address: string = addresses[key];
             console.log(address);
             //let account: Account = {id:"0", name:"test"};
-            let account = {name: i.toString(), address: address, privateKey: "", balance: ""} as Account;
+            let account = {name: i.toString(), address: address, privateKey: ""} as Account;
             var balance: string = "";
             
             try {
                 balance = await this.eth.getBalance(address);
             } catch (e) {
-                error = e;
+                /*
+                if (typeof e === "string") {
+                    let str: string = e.toLowerCase();
+                } else if (e instanceof Error) {
+                    error = e;
+                } */
+                error = e as Error;
             }
             
             account.balance = balance;
@@ -67,6 +83,7 @@ export class Web3Session extends Web3 {
         }
         
         callback(error, accountList);
+        return accountList;
     }
 
     public readAccounts(callback: (error: Error, accounts: Account[]) => void ) {
