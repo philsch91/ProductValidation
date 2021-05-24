@@ -40,7 +40,6 @@ contract("ProductSale", function(accounts){
   });
 
   it("should the seller account owns the contract", function(){
-    
     var sale;
 
     return ProductSale.new({from: seller}).then(function(instance){
@@ -54,7 +53,6 @@ contract("ProductSale", function(accounts){
   });
   
   it("should the second account was the buyer", function(){
-
     var sale;
 
     return ProductSale.new({from: seller}).then(function(instance){
@@ -83,7 +81,6 @@ contract("ProductSale", function(accounts){
   });
 
   it("should first order was number 1", function(){
-
     var sale;
 
     return ProductSale.new({from: seller}).then(function(instance){
@@ -112,7 +109,6 @@ contract("ProductSale", function(accounts){
   });
 
   it("should the shipment price was set", function(){
-
     var sale;
 
     return ProductSale.new({from: seller}).then(function(instance){
@@ -130,7 +126,6 @@ contract("ProductSale", function(accounts){
   });
   
   it("should the order's price was set", function(){
-
     var sale;
 
     return ProductSale.new({from: seller}).then(function(instance){
@@ -148,7 +143,6 @@ contract("ProductSale", function(accounts){
   });
 
   it("should the safe pay was correct", function(){
-    
     var sale;
 
     return ProductSale.new({from: seller}).then(function(instance){
@@ -169,7 +163,6 @@ contract("ProductSale", function(accounts){
   });
 
   it("should the contract's balance was correct after the safepay", function(){
-    
     var sale;
 
     return ProductSale.new({from: seller}).then(function(instance){
@@ -197,7 +190,6 @@ contract("ProductSale", function(accounts){
   });
 
   it("should the first invoice was number 1", function(){
-    
     var sale;
 
     return ProductSale.new({from: seller}).then(function(instance){
@@ -217,7 +209,6 @@ contract("ProductSale", function(accounts){
   
 
   it("should the invoice 1 it is for order 1", function(){
-    
     var sale;
 
     return ProductSale.new({from: seller}).then(function(instance){
@@ -236,7 +227,6 @@ contract("ProductSale", function(accounts){
   });
 
   it("should the courier was correct", function(){
-    
     var sale;
 
     return ProductSale.new({from: seller}).then(function(instance){
@@ -255,7 +245,6 @@ contract("ProductSale", function(accounts){
   });
 
   it("should the contract's balance was correct after the delivery", function(){
-    
     var sale;
 
     return ProductSale.new({from: seller}).then(function(instance){
@@ -297,12 +286,53 @@ contract("ProductSale", function(accounts){
       }).then(function(){
         sale.setProductValidationContractAddress(product.address, {from: seller});
       }).then(function(){
-	      return sale.getProductValidationContractAddress();
+        return sale.getProductValidationContractAddress();
       }).then(function(contractAddress){
         console.log("product.address: " + product.address);
         //console.log("sale.address: " + sale.address);
         console.log("contractAddress: " + contractAddress);
         assert.equal(contractAddress, product.address);
+      });
+    });
+  });
+
+  it("should add product was added to the Product contract", function(){
+    var product;
+    var sale;
+
+    return Product.new({from: seller}).then(function(instance){
+      product = instance;
+      return ProductSale.new({from: seller}).then(function(instance){
+        sale = instance;
+      }).then(function(){
+        sale.setProductValidationContractAddress(product.address, {from: seller});
+      }).then(function(){
+        return sale.getProductValidationContractAddress();
+      }).then(function(productContractAddress){
+        console.log("product contract address: " + productContractAddress);
+      }).then(function(){
+        return sale.sendOrder(goods, quantity, {from: buyer});
+      }).then(function(){
+        return sale.sendPrice(orderno, order_price, TYPE_ORDER, {from: seller});
+      }).then(function(){
+        return sale.sendPrice(orderno, shipment_price, TYPE_SHIPMENT, {from: seller});
+      }).then(function(){
+        return sale.sendSafepay(orderno, {from: buyer, value: price});
+      }).then(function(){
+        return sale.sendInvoice(orderno, 0, courier, {from: seller});
+      }).then(function(){
+        return sale.delivery(invoiceno, 0, {from: courier});
+      }).then(function(){
+        return new Promise(function(resolve, reject){
+          return web3.eth.getBalance(sale.address, function(err, hash){
+            if(err){
+              reject(err);
+            }
+            resolve(hash);
+          });
+        });
+      }).then(function(balance){
+        assert.equal(balance.toString(), 0);
       });
     });
   });
