@@ -1,11 +1,14 @@
-pragma solidity >=0.6.1;
-//pragma solidity >=0.5.0  <0.6.0;
+// SPDX-License-Identifier: GPL-3.0
+
+pragma solidity >=0.6.1 <=0.7.6;
 //pragma experimental ABIEncoderV2;
 
 contract Product {
     address payable private owner;
+    address public productSaleContractAddress;
     uint256 private startTime;
     uint256 private productId;
+    uint256[] productInfoList;
 
     event ReturnValue(string productOwnerName, string productName, uint creationDate);
 
@@ -16,8 +19,6 @@ contract Product {
     }
 
     mapping(uint256 => ProductInformation) productInfos;
-
-    uint256[] productInfoList;
 
     modifier onlyWhileOpen() {
         require(block.timestamp >= startTime);
@@ -31,22 +32,43 @@ contract Product {
 
     constructor() public {
         owner = msg.sender;
-        startTime = now;
+        //startTime = now;
+        startTime = block.timestamp;
         productId = 0;
+
+        // casting from address payable to address
+        //address payable _addr = msg.sender;
+        //address addr = address(_addr);
+
+        // casting from address to address payable
+        //address _addr = msg.sender;
+        //address payable addr = address(uint160(_addr));
     }
 
-    function close() public onlyOwner {//onlyOwner is custom modifier
+    /*
+     * onlyOwner is custom modifier
+     */
+    function close() public onlyOwner {
         selfdestruct(owner);
         // `owner` is the owners address
     }
 
-    function addProduct(string memory _productOwnerName, string memory _productName) public onlyWhileOpen onlyOwner {
+    function setProductSaleContractAddress(address contractAddress) public onlyOwner {
+        productSaleContractAddress = contractAddress;
+    }
 
+    function getProductSaleContractAddress() public view onlyOwner returns (address) {
+        return productSaleContractAddress;
+    }
+
+    function addProduct(string memory _productOwnerName, string memory _productName) public onlyWhileOpen {
+        require(msg.sender == owner || msg.sender == productSaleContractAddress);
         Product.ProductInformation storage productInfo = productInfos[productId + 1];
 
         productInfo.productOwnerName = _productOwnerName;
         productInfo.productName = _productName;
-        productInfo.creationDate = now;
+        //productInfo.creationDate = now;
+        productInfo.creationDate = block.timestamp;
 
         productInfoList.push(productId + 1);
         productId = productId + 1;

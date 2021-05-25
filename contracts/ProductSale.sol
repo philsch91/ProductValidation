@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity >=0.6.1;
+pragma solidity >=0.6.1 <=0.7.6;
 //pragma solidity ^0.5.11;
+//pragma experimental ABIEncoderV2;
 
 interface IProduct {
     function addProduct(string calldata _productOwnerName, string calldata _productName) external;
@@ -99,11 +100,11 @@ contract ProductSale {
         // The seller is the contract's owner
         owner = msg.sender;
 
-        //casting from address payable to address
+        // casting from address payable to address
         //address payable _addr = msg.sender;
         //address addr = address(_addr);
 
-        //casting from address to address payable
+        // casting from address to address payable
         //address _addr = msg.sender;
         //address payable addr = address(uint160(_addr));
     }
@@ -341,6 +342,13 @@ contract ProductSale {
         productValidationContract = IProduct(productValidationContractAddress);
         productValidationContract.addProduct(_productOwnerName, _order.product.productName);
     }
+
+    /*
+    function createProductContract() public {
+        // Only the contract owner (seller) can deploy a new Product contract
+        require(msg.sender == owner);
+        return new Product();
+    } */
 
     function health() public pure returns (string memory) {
         return "alive";
