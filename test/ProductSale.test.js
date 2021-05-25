@@ -287,11 +287,33 @@ contract("ProductSale", function(accounts){
         sale.setProductValidationContractAddress(product.address, {from: seller});
       }).then(function(){
         return sale.getProductValidationContractAddress();
-      }).then(function(contractAddress){
-        console.log("product.address: " + product.address);
+      }).then(function(productContractAddress){
+        console.log("product validation contract address: " + product.address);
         //console.log("sale.address: " + sale.address);
-        console.log("contractAddress: " + contractAddress);
-        assert.equal(contractAddress, product.address);
+        console.log("returned product validation contract address: " + productContractAddress);
+        assert.equal(productContractAddress, product.address);
+      });
+    });
+  });
+
+  it("should the sale contract address should be correctly set", function(){
+    var product;
+    var sale;
+
+    return Product.new({from: seller}).then(function(instance){
+      product = instance;
+      return ProductSale.new({from: seller}).then(function(instance){
+        sale = instance;
+      }).then(function(){
+        sale.setProductValidationContractAddress(product.address, {from: seller});
+      }).then(function(){
+        product.setProductSaleContractAddress(sale.address, {from: seller});
+      }).then(function(){
+        return product.getProductSaleContractAddress();
+      }).then(function(saleContractAddress){
+        console.log("sale contract address: " + sale.address);
+        console.log("returned sale contract address: " + saleContractAddress);
+        assert.equal(saleContractAddress, sale.address);
       });
     });
   });
@@ -309,7 +331,15 @@ contract("ProductSale", function(accounts){
       }).then(function(){
         return sale.getProductValidationContractAddress();
       }).then(function(productContractAddress){
-        console.log("product contract address: " + productContractAddress);
+        console.log("product validation contract address: " + product.address);
+        console.log("returned product validation contract address: " + productContractAddress);
+      }).then(function(){
+        product.setProductSaleContractAddress(sale.address, {from: seller});
+      }).then(function(){
+        return product.getProductSaleContractAddress();
+      }).then(function(saleContractAddress){
+        console.log("sale contract address: " + sale.address);
+        console.log("returned sale contract address: " + saleContractAddress);
       }).then(function(){
         return sale.sendOrder(goods, quantity, {from: buyer});
       }).then(function(){
