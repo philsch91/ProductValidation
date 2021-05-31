@@ -1,5 +1,5 @@
 import Web3 from 'web3';
-import { Contract, ContractOptions, ContractSendMethod, SendOptions, DeployOptions } from 'web3-eth-contract';
+import { Contract, ContractOptions, ContractSendMethod, SendOptions, DeployOptions, EstimateGasOptions } from 'web3-eth-contract';
 import { Personal } from 'web3-eth-personal';
 import { Accounts } from 'web3-eth-accounts';
 import { Providers, provider, HttpProvider, WebsocketProvider, IpcProvider, SignedTransaction, TransactionReceipt, RLPEncodedTransaction } from 'web3-core';
@@ -31,6 +31,18 @@ export class Web3Session extends Web3 {
     public async getAccounts(): Promise<string[]> {
         const addresses: string[] = await this.eth.getAccounts();
         return addresses;
+    }
+
+    /**
+     * User-defined type guards
+     */
+
+    public isTransactionConfig(object: any): object is TransactionConfig {
+        return object.gas !== undefined;
+    }
+
+    public isContractSendMethod(object: any): object is ContractSendMethod {
+        return (object.estimateGas as ContractSendMethod).estimateGas !== undefined;
     }
 
     /**
@@ -173,17 +185,30 @@ export class Web3Session extends Web3 {
      * @param transaction 
      * @param callback 
      */
-    private async estimateGas(transaction: any, callback?:(error?: Error, gas?: Number) => void): Promise<Number> {
+    private async estimateGas(object: TransactionConfig | ContractSendMethod, callback?:(error?: Error, gas?: Number) => void): Promise<Number | Error> {
+        var gasPrice: string;
         var gas: Number = 0;
         
         try {
-            gas = await transaction.estimateGas({from: this.eth.defaultAccount});
+            gasPrice = await this.eth.getGasPrice();
+            if (this.isTransactionConfig(object)) {
+                // object = {from: "fromAddress", to: "toAddress", value: "000001", gas: "6721975", gasPrice: gasPrice, data: undefined, nonce: undefined, chainId: undefined} as TransactionConfig
+                gas = await this.eth.estimateGas(object);
+            } else if (this.isContractSendMethod(object)) {
+                var from: string | undefined = undefined;
+                if (this.eth.defaultAccount != null) {
+                    from = this.eth.defaultAccount;
+                }
+                let estimateGasOptions: EstimateGasOptions = {from: from, gas: undefined, value: undefined}
+                gas = await object.estimateGas(estimateGasOptions);
+            }
         } catch (error) {
             if (!callback) {
                 throw error;
             }
             callback(error);
-            return 0;
+            //return 0;
+            return error;
         }
 
         // TODO: move console.log() into application specific callback
@@ -200,16 +225,20 @@ export class Web3Session extends Web3 {
         var sendMethod: ContractSendMethod;
         var gas: Number = 0;
         var newContract: Contract;
-        var transactionHash: String | undefined;
+        var transactionHash: String | undefined = undefined;
+        var from: string | undefined = undefined;
 
         if (this.eth.defaultAccount != null) {
             sendOptions.from = this.eth.defaultAccount;
+            from = this.eth.defaultAccount;
         }
+
+        sendMethod = contract.deploy(deployOptions);
         
         try {
-            sendMethod = contract.deploy(deployOptions);
-            //gas = await transaction.estimateGas({from: this.eth.defaultAccount});
-            gas = await this.estimateGas(sendMethod);
+            //gas = await this.estimateGas(sendMethod);
+            let estimateGasOptions: EstimateGasOptions = {from: from, gas: undefined, value: undefined}
+            gas = await sendMethod.estimateGas(estimateGasOptions);
             //sendOptions.gas = +gas
             sendOptions.gas = Number(gas + "")  //without 'new' a primitive number is created
             console.log(sendOptions);
@@ -244,8 +273,8 @@ export class Web3Session extends Web3 {
      * @param transaction
      * @param callback
      */
-    public async send(transaction: any, callback?: (error?: Error, receipt?: Object) => void): Promise<any> {
-        var gas: Number = 0;
+    public async send(transaction: TransactionConfig, callback?: (error?: Error, receipt?: Object) => void): Promise<any> {
+        var gas: Number | Error = 0;
         var receipt: TransactionReceipt;
         
         try {
@@ -417,7 +446,7 @@ export class Web3Session extends Web3 {
     }
 
     public async call(transaction: any, callback?: (error?: Error, receipt?: Object) => void): Promise<any> {
-        var gas: Number = 0;
+        var gas: Number | Error = 0;
         var receipt: Object;
         
         try {
