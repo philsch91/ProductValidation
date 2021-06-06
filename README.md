@@ -46,7 +46,16 @@ Beware: If Ether is sent to a contract and the transaction fails, the entire gas
 - `npm update "react" "react-dom"`
 - `npm install <packagename>@latest [<packagename2>@latest]`
 
+### Solc-js Setup
+1. `npm install -g solc` [GitHub Solc-js](https://github.com/ethereum/solc-js)
+2. Check Solidity compiler version with `solcjs --version`
+
 ### Truffle Setup
+
+Truffle includes Mocha and Chai for testing smart contracts in JavaScript. Mocha is used as the testing framework and Chai for assertions.
+Instead of the `describe` function, Truffle provides and uses the `contract` function.
+In contrast to the `describe`function, the `contract` function should make sure that the contracts are redeployed in the running Ethereum blockchain via the configured client for a clean state in terms of the contracts. In addition to that, the `contract` function is called with a list of accounts that can be used in the contained test case functions.
+
 1. `npm install -g truffle`
 2. `npm install --save @types/jest`
 3. `truffle init`
@@ -58,10 +67,6 @@ Beware: If Ether is sent to a contract and the transaction fails, the entire gas
 9. truffle test [Truffle testing documentation](http://truffleframework.com/docs/getting_started/testing)
 10. truffle compile
 11. truffle migrate [Truffle migrations documentation](http://truffleframework.com/docs/getting_started/migrations)
-
-### Solc-js Setup
-1. `npm install -g solc` [GitHub Solc-js](https://github.com/ethereum/solc-js)
-2. Check Solidity compiler version with `solcjs --version`
 
 ### Compile and Use Solidity Smart Contracts
 1. Compile bytecode and Application Binary Interface (ABI) for your contract with `solcjs --bin --abi Contract.sol`

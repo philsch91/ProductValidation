@@ -327,14 +327,14 @@ contract("ProductSale", function(accounts){
       return ProductSale.new({from: seller}).then(function(instance){
         sale = instance;
       }).then(function(){
-        sale.setProductValidationContractAddress(product.address, {from: seller});
+        return sale.setProductValidationContractAddress(product.address, {from: seller});
       }).then(function(){
         return sale.getProductValidationContractAddress();
       }).then(function(productContractAddress){
         console.log("product validation contract address: " + product.address);
         console.log("returned product validation contract address: " + productContractAddress);
       }).then(function(){
-        product.setProductSaleContractAddress(sale.address, {from: seller});
+        return product.setProductSaleContractAddress(sale.address, {from: seller});
       }).then(function(){
         return product.getProductSaleContractAddress();
       }).then(function(saleContractAddress){
@@ -353,16 +353,31 @@ contract("ProductSale", function(accounts){
       }).then(function(){
         return sale.delivery(invoiceno, 0, {from: courier});
       }).then(function(){
-        return new Promise(function(resolve, reject){
-          return web3.eth.getBalance(sale.address, function(err, hash){
-            if(err){
-              reject(err);
-            }
-            resolve(hash);
+        var productInfoPromise = product.getProductFromProductId(1);
+        console.log(productInfoPromise);
+        return productInfoPromise.then(function(productInfo){
+          console.log(productInfo);
+          return productInfo;
+        }).then(function(productInfo){
+          //assert.equal(productInfo.productName, goods);
+          console.log(buyer);
+          buyer = buyer.substring(2);
+          buyer = buyer.toLowerCase();
+          console.log("buyer: " + buyer);
+          console.log("product: " + goods);
+          /*
+          expect({ownerName: productInfo.ownerName, productName: productInfo.productName}).toEqual({
+            ownerName: buyer,
+            productName: goods,
           });
+          */
+          //expect(productInfo.ownerName).toBe(buyer);
+          //expect(productInfo.productName).toBe(goods);
+          //expect(productInfo.ownerName.isPresent()).to.eventually.equal(buyer);
+          //expect(productInfo.productName.isPresent()).to.eventually.equal(goods);
+          expect(productInfo.ownerName).to.equal(buyer);
+          expect(productInfo.productName).to.equal(goods);
         });
-      }).then(function(balance){
-        assert.equal(balance.toString(), 0);
       });
     });
   });
