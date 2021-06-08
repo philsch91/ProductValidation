@@ -12,7 +12,7 @@ contract Product {
 
     event ReturnValue(string productOwnerName, string productName, uint creationDate);
     // Event triggered for completed order, delivery and transfer of ownership
-    event OwnershipTransfered(string productOwnerName, uint productId);
+    event OwnershipTransferred(string productOwnerName, uint productId);
 
     struct ProductInformation {
         string productOwnerName;
@@ -76,7 +76,7 @@ contract Product {
         productId = productId + 1;
 
         // Trigger the event OwnershipTransfered
-        emit OwnershipTransfered(_productOwnerName, productId);
+        emit OwnershipTransferred(_productOwnerName, productId);
     }
 
     function getAllProductIds() public view onlyOwner returns (uint256[] memory){

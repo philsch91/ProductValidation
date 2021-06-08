@@ -39,7 +39,6 @@ contract("Deal", function(accounts){
   });
 
   it("should the seller account owns the contract", function(){
-    
     var deal;
 
     return Deal.new(buyer, {from: seller}).then(function(instance){
@@ -53,7 +52,6 @@ contract("Deal", function(accounts){
   });
   
   it("should the second account was the buyer", function(){
-
     var deal;
 
     return Deal.new(buyer, {from: seller}).then(function(instance){
@@ -67,7 +65,6 @@ contract("Deal", function(accounts){
   });
 
   it("should first order was number 1", function(){
-
     var deal;
 
     return Deal.new(buyer, {from: seller}).then(function(instance){
@@ -96,7 +93,6 @@ contract("Deal", function(accounts){
   });
 
   it("should the shipment price was set", function(){
-
     var deal;
 
     return Deal.new(buyer, {from: seller}).then(function(instance){
@@ -114,7 +110,6 @@ contract("Deal", function(accounts){
   });
   
   it("should the order's price was set", function(){
-
     var deal;
 
     return Deal.new(buyer, {from: seller}).then(function(instance){
@@ -132,7 +127,6 @@ contract("Deal", function(accounts){
   });
 
   it("should the safe pay was correct", function(){
-    
     var deal;
 
     return Deal.new(buyer, {from: seller}).then(function(instance){
@@ -153,7 +147,6 @@ contract("Deal", function(accounts){
   });
 
   it("should the contract's balance was correct after the safepay", function(){
-    
     var deal;
 
     return Deal.new(buyer, {from: seller}).then(function(instance){
@@ -181,7 +174,6 @@ contract("Deal", function(accounts){
   });
 
   it("should the first invoice was number 1", function(){
-    
     var deal;
 
     return Deal.new(buyer, {from: seller}).then(function(instance){
@@ -200,8 +192,7 @@ contract("Deal", function(accounts){
   });
   
 
-  it("should the invoice 1 it is for order 1", function(){
-    
+  it("should the invoice 1 is for order 1", function(){
     var deal;
 
     return Deal.new(buyer, {from: seller}).then(function(instance){
@@ -220,7 +211,6 @@ contract("Deal", function(accounts){
   });
 
   it("should the courier was correct", function(){
-    
     var deal;
 
     return Deal.new(buyer, {from: seller}).then(function(instance){
@@ -239,7 +229,6 @@ contract("Deal", function(accounts){
   });
 
   it("should the contract's balance was correct after the delivery", function(){
-    
     var deal;
 
     return Deal.new(buyer, {from: seller}).then(function(instance){

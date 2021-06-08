@@ -208,7 +208,7 @@ contract("ProductSale", function(accounts){
   });
   
 
-  it("should the invoice 1 it is for order 1", function(){
+  it("should the invoice 1 is for order 1", function(){
     var sale;
 
     return ProductSale.new({from: seller}).then(function(instance){
