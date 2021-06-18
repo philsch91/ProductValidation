@@ -27,7 +27,7 @@ contract ProductSale {
         uint safepay;
         address payer;
         uint date;
-        uint real_date;
+        uint realDate;
         bool init;
     }
 
@@ -42,7 +42,7 @@ contract ProductSale {
         address buyer;
         bool init;
     }
-  
+
     struct ProductInformation {
         address productOwnerName;
         string productName;
@@ -68,22 +68,22 @@ contract ProductSale {
     //uint256 buyerseq;
 
     // Event triggered for every registered buyer
-    event BuyerRegistered(address buyer, string name);
+    event BuyerRegistered(address indexed buyer, string indexed name);
 
     // Event triggered for every new order
-    event OrderSent(address buyer, string goods, uint quantity, uint orderno);
+    event OrderSent(address indexed buyer, uint indexed orderno, string indexed indexedProductName, string productName, uint quantity);
 
     // Event triggerd when the order gets valued and wants to know the value of the payment
-    event PriceSent(address buyer, uint orderno, uint price, int8 ttype);
+    event PriceSent(address indexed buyer, uint indexed orderno, uint price, int8 ttype);
 
     // Event trigger when the buyer performs the safepay
-    event SafepaySent(address buyer, uint orderno, uint value, uint now);
+    event SafepaySent(address indexed buyer, uint indexed orderno, uint value, uint now);
 
     // Event triggered when the seller sends the invoice
-    event InvoiceSent(address buyer, uint invoiceno, uint orderno, uint delivery_date, address courier);
+    event InvoiceSent(address indexed buyer, uint indexed invoiceno, uint indexed orderno, uint deliveryDate, address courier);
 
     // Event triggered when the courier delivers the order
-    event OrderDelivered(address buyer, uint invoiceno, uint orderno, uint real_delivey_date, address courier);
+    event OrderDelivered(address indexed buyer, uint indexed invoiceno, uint indexed orderno, uint realDeliveryDate, address courier);
 
     modifier onlyOwner () {
         require(msg.sender == owner);
@@ -112,7 +112,7 @@ contract ProductSale {
     function getOwner() public view returns (address) {
         return owner;
     }
-  
+
     function setProductValidationContractAddress(address contractAddress) public onlyOwner {
         productValidationContractAddress = contractAddress;
     }
@@ -128,7 +128,9 @@ contract ProductSale {
 
     function addBuyer(address _buyerAddress) private {
         if (isBuyer(_buyerAddress)) {
-            revert();
+            //revert();
+            //revert("buyer already registered");
+            return;
         }
         buyers[_buyerAddress] = Buyer(_buyerAddress, "", true);
         //buyerseq++;
@@ -136,7 +138,9 @@ contract ProductSale {
 
     function addBuyer(address _buyerAddress, string memory _buyerName) private {
         if (isBuyer(_buyerAddress)) {
-            revert();
+            //revert();
+            //revert("buyer already registered");
+            return;
         }
         buyers[_buyerAddress] = Buyer(_buyerAddress, _buyerName, true);
         //buyerseq++;
@@ -158,7 +162,7 @@ contract ProductSale {
     // requires fee
     // Payable functions returns just the transaction object, with no custom field.
     // To get field values listen to OrderSent event.
-    //function sendOrder(string memory goods, uint quantity) public payable {
+    //function sendOrder(string memory productName, uint quantity) public payable {
     function sendOrder(string memory productName, uint quantity) public payable {
         // Accept orders just from buyer
         //require(msg.sender == buyerAddr);
@@ -173,13 +177,13 @@ contract ProductSale {
         orderseq++;
 
         // Create the order register
-        //orders[orderseq] = Order(goods, quantity, orderseq, 0, 0, Shipment(address(0), 0, 0, address(0), 0, 0, false), true);
+        //orders[orderseq] = Order(productName, quantity, orderseq, 0, 0, Shipment(address(0), 0, 0, address(0), 0, 0, false), true);
         orders[orderseq] = Order(productInfo, quantity, orderseq, 0, 0, shipment, msg.sender, true);
 
         addBuyer(msg.sender);
 
         // Trigger the event
-        emit OrderSent(msg.sender, productName, quantity, orderseq);
+        emit OrderSent(msg.sender, orderseq, productName, productName, quantity);
     }
 
     // The function to query orders by number
@@ -190,8 +194,8 @@ contract ProductSale {
         uint quantity,
         uint price,
         uint safepay,
-        uint delivery_price,
-        uint delivey_safepay) {
+        uint deliveryPrice,
+        uint deliverySafepay) {
         // Validate the order number
         require(orders[orderno].init);
 
@@ -260,7 +264,7 @@ contract ProductSale {
 
     // The function to send the invoice data
     // requires fee
-    function sendInvoice(uint orderno, uint delivery_date, address courier) public payable {
+    function sendInvoice(uint orderno, uint deliveryDate, address courier) public payable {
         // Validate the order number
         require(orders[orderno].init);
 
@@ -279,12 +283,12 @@ contract ProductSale {
         invoices[invoiceseq] = Invoice(orderno, invoiceseq, true);
 
         // Update the shipment data
-        orders[orderno].shipment.date = delivery_date;
+        orders[orderno].shipment.date = deliveryDate;
         orders[orderno].shipment.courier = courier;
 
         // Trigger the event
-        //emit InvoiceSent(orders[orderno].buyer, invoiceseq, orderno, delivery_date, courier);
-        emit InvoiceSent(buyers[buyerAddress].addr, invoiceseq, orderno, delivery_date, courier);
+        //emit InvoiceSent(orders[orderno].buyer, invoiceseq, orderno, deliveryDate, courier);
+        emit InvoiceSent(buyers[buyerAddress].addr, invoiceseq, orderno, deliveryDate, courier);
     }
 
     // The function to get the sent invoice
@@ -292,7 +296,7 @@ contract ProductSale {
     function getInvoice(uint invoiceno) public view returns (
         address buyer,
         uint orderno,
-        uint delivery_date,
+        uint deliveryDate,
         address courier){
         // Validate the invoice number
         require(invoices[invoiceno].init);
