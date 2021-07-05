@@ -23,7 +23,7 @@ contract("ProductSale", function(accounts){
   var order_price = null;
   var shipment_price = null;
   var price = null;
-  var goods = null;
+  var productName = null;
   var quantity = null;
 
   before(function(){
@@ -35,7 +35,7 @@ contract("ProductSale", function(accounts){
     order_price = 100000;
     shipment_price = 50000;
     price = order_price + shipment_price;
-    goods = "Wine";
+    productName = "Wine";
     quantity = 300;
   });
 
@@ -58,7 +58,7 @@ contract("ProductSale", function(accounts){
     return ProductSale.new({from: seller}).then(function(instance){
       sale = instance;
 
-      return sale.sendOrder(goods, quantity, {from: buyer});
+      return sale.sendOrder(productName, quantity, {from: buyer});
     }).then(function(transaction){
       return new Promise(function(resolve, reject){
         return web3.eth.getTransaction(transaction.tx, function(err, tx){
@@ -86,7 +86,7 @@ contract("ProductSale", function(accounts){
     return ProductSale.new({from: seller}).then(function(instance){
       sale = instance;
 
-      return sale.sendOrder(goods, quantity, {from: buyer});
+      return sale.sendOrder(productName, quantity, {from: buyer});
     }).then(function(transaction){
       return new Promise(function(resolve, reject){
         return web3.eth.getTransaction(transaction.tx, function(err, tx){
@@ -114,7 +114,7 @@ contract("ProductSale", function(accounts){
     return ProductSale.new({from: seller}).then(function(instance){
       sale = instance;
 
-      return sale.sendOrder(goods, quantity, {from: buyer});
+      return sale.sendOrder(productName, quantity, {from: buyer});
     }).then(function(){
       return sale.sendPrice(orderno, shipment_price, TYPE_SHIPMENT, {from: seller});
     }).then(function(){
@@ -131,7 +131,7 @@ contract("ProductSale", function(accounts){
     return ProductSale.new({from: seller}).then(function(instance){
       sale = instance;
 
-      return sale.sendOrder(goods, quantity, {from: buyer});
+      return sale.sendOrder(productName, quantity, {from: buyer});
     }).then(function(){
       return sale.sendPrice(orderno, order_price, TYPE_ORDER, {from: seller});
     }).then(function(){
@@ -148,7 +148,7 @@ contract("ProductSale", function(accounts){
     return ProductSale.new({from: seller}).then(function(instance){
       sale = instance;
       
-      return sale.sendOrder(goods, quantity, {from: buyer});
+      return sale.sendOrder(productName, quantity, {from: buyer});
     }).then(function(){
       return sale.sendPrice(orderno, order_price, TYPE_ORDER, {from: seller});
     }).then(function(){
@@ -168,7 +168,7 @@ contract("ProductSale", function(accounts){
     return ProductSale.new({from: seller}).then(function(instance){
       sale = instance;
       
-      return sale.sendOrder(goods, quantity, {from: buyer});
+      return sale.sendOrder(productName, quantity, {from: buyer});
     }).then(function(){
       return sale.sendPrice(orderno, order_price, TYPE_ORDER, {from: seller});
     }).then(function(){
@@ -195,7 +195,7 @@ contract("ProductSale", function(accounts){
     return ProductSale.new({from: seller}).then(function(instance){
       sale = instance;
 
-      return sale.sendOrder(goods, quantity, {from: buyer});
+      return sale.sendOrder(productName, quantity, {from: buyer});
     }).then(function(){
       return sale.sendPrice(orderno, price, TYPE_ORDER, {from: seller});
     }).then(function(){
@@ -214,7 +214,7 @@ contract("ProductSale", function(accounts){
     return ProductSale.new({from: seller}).then(function(instance){
       sale = instance;
 
-      return sale.sendOrder(goods, quantity, {from: buyer});
+      return sale.sendOrder(productName, quantity, {from: buyer});
     }).then(function(){
       return sale.sendPrice(orderno, price, TYPE_ORDER, {from: seller});
     }).then(function(){
@@ -232,7 +232,7 @@ contract("ProductSale", function(accounts){
     return ProductSale.new({from: seller}).then(function(instance){
       sale = instance;
 
-      return sale.sendOrder(goods, quantity, {from: buyer});
+      return sale.sendOrder(productName, quantity, {from: buyer});
     }).then(function(){
       return sale.sendPrice(orderno, price, TYPE_ORDER, {from: seller});
     }).then(function(){
@@ -250,7 +250,7 @@ contract("ProductSale", function(accounts){
     return ProductSale.new({from: seller}).then(function(instance){
       sale = instance;
       
-      return sale.sendOrder(goods, quantity, {from: buyer});
+      return sale.sendOrder(productName, quantity, {from: buyer});
     }).then(function(){
       return sale.sendPrice(orderno, order_price, TYPE_ORDER, {from: seller});
     }).then(function(){
@@ -341,7 +341,7 @@ contract("ProductSale", function(accounts){
         console.log("sale contract address: " + sale.address);
         console.log("returned sale contract address: " + saleContractAddress);
       }).then(function(){
-        return sale.sendOrder(goods, quantity, {from: buyer});
+        return sale.sendOrder(productName, quantity, {from: buyer});
       }).then(function(){
         return sale.sendPrice(orderno, order_price, TYPE_ORDER, {from: seller});
       }).then(function(){
@@ -359,24 +359,24 @@ contract("ProductSale", function(accounts){
           console.log(productInfo);
           return productInfo;
         }).then(function(productInfo){
-          //assert.equal(productInfo.productName, goods);
+          //assert.equal(productInfo.productName, productName);
           console.log(buyer);
           buyer = buyer.substring(2);
           buyer = buyer.toLowerCase();
           console.log("buyer: " + buyer);
-          console.log("product: " + goods);
+          console.log("product: " + productName);
           /*
           expect({ownerName: productInfo.ownerName, productName: productInfo.productName}).toEqual({
             ownerName: buyer,
-            productName: goods,
+            productName: productName,
           });
           */
           //expect(productInfo.ownerName).toBe(buyer);
-          //expect(productInfo.productName).toBe(goods);
+          //expect(productInfo.productName).toBe(productName);
           //expect(productInfo.ownerName.isPresent()).to.eventually.equal(buyer);
-          //expect(productInfo.productName.isPresent()).to.eventually.equal(goods);
+          //expect(productInfo.productName.isPresent()).to.eventually.equal(productName);
           expect(productInfo.ownerName).to.equal(buyer);
-          expect(productInfo.productName).to.equal(goods);
+          expect(productInfo.productName).to.equal(productName);
         });
       });
     });
