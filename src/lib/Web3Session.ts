@@ -2,12 +2,11 @@ import Web3 from 'web3';
 import { Contract, ContractOptions, ContractSendMethod, SendOptions, DeployOptions, EstimateGasOptions } from 'web3-eth-contract';
 import { Personal } from 'web3-eth-personal';
 import { Accounts } from 'web3-eth-accounts';
-import { Providers, provider, HttpProvider, WebsocketProvider, IpcProvider, SignedTransaction, TransactionReceipt, RLPEncodedTransaction } from 'web3-core';
+import { Providers, provider, HttpProvider, WebsocketProvider, IpcProvider, SignedTransaction, TransactionReceipt, RLPEncodedTransaction, BlockNumber } from 'web3-core';
 import { TransactionConfig, BlockTransactionString } from 'web3-eth';
 import { Account } from './interfaces/account';
 import { AccountDelegate } from './interfaces/AccountDelegate';
 import { Transaction } from '../models/transaction';
-import { createCall } from 'typescript';
 
 export class Web3Session extends Web3 {
     private _account?: Account;
@@ -304,17 +303,94 @@ export class Web3Session extends Web3 {
     }
 
     /**
+     * Gets and sets the gas price for a transaction config.
+     * Called by sendSigned(transactionConfig, callback)
+     * @param transactionConfig
+     * @param callback
+     * @returns Promise<TransactionConfig | Error>
+     */
+    private async getGasPriceIfNeeded(transactionConfig: TransactionConfig, callback?: (error?: Error, gasPrice?: string) => void): Promise<TransactionConfig | Error> {
+        if (transactionConfig.gasPrice !== undefined) {
+            return transactionConfig;
+        }
+
+        var gasPrice: string;
+        try {
+            gasPrice = await this.eth.getGasPrice((error: Error, gasPrice: string) => {
+                if (callback !== undefined && error !== undefined) {
+                    callback(error);
+                    return error;
+                }
+                if (callback === undefined && error !== undefined) {
+                    throw error;
+                }
+            });
+        } catch (error) {
+            if (!callback) {
+                throw error;
+                //return Promise.reject(error);
+            }
+            //callback(error, undefined);
+            callback(error);
+            return error;
+        }
+
+        transactionConfig.gasPrice = gasPrice;
+        return transactionConfig;
+    }
+
+    /**
+     * Estimates the gas for a transaction config.
+     * Called by sendSigned(transactionConfig, callback)
+     * @param transactionConfig
+     * @param callback
+     * @returns Promise<TransactionConfig | Error>
+     */
+    private async estimateGasIfNeeded(transactionConfig: TransactionConfig, callback?: (error?: Error, gas?: number) => void): Promise <TransactionConfig | Error> {
+        if (transactionConfig.gas !== undefined) {
+            return transactionConfig;
+        }
+
+        var gas: number;
+        try {
+            //gas = await this.estimateGas(signedTransaction);
+            gas = await this.eth.estimateGas(transactionConfig, (error: Error, gas: number) => {
+                //console.log("sengSigned gas: " + gas)  //21000
+                if (callback !== undefined && error !== undefined) {
+                    callback(error, undefined);
+                    return error;
+                }
+                if (callback === undefined && error !== undefined) {
+                    throw error;
+                }
+            });
+        } catch (error) {
+            if (!callback) {
+                throw error;
+                //return Promise.reject(error);
+            }
+            //callback(error, undefined);
+            callback(error);
+            return error;
+        }
+
+        transactionConfig.gas = gas;
+        return transactionConfig;
+    }
+
+    /**
      * sendSigned() is based on eth_accounts
      * and uses the private key set in this._account.privateKey
      * @param transactionConfig
      * @param callback
      * @returns Promise<TransactionReceipt | undefined>
      */
-    public async sendSigned(transactionConfig: TransactionConfig, callback?: (error?: Error, receipt?: TransactionReceipt) => void): Promise<TransactionReceipt | undefined> {
+    public async sendSigned(transactionConfig: TransactionConfig, callback?: (error?: Error, receipt?: TransactionReceipt) => void): Promise<TransactionReceipt | Error> {
         var gas: number = 0;
         var receipt: TransactionReceipt;
 
         if (transactionConfig.from === undefined && this.defaultAccount !== null) {
+            //this.eth.defaultAccount
             transactionConfig.from = this.defaultAccount
         }
 
@@ -326,23 +402,46 @@ export class Web3Session extends Web3 {
             if (callback !== undefined) {
                 callback(Error("private key not set"));
             }
-            return;
+            return Error("private key not set");
         }
 
-        try {
-            //gas = await this.estimateGas(signedTransaction);
-            var gas = await this.eth.estimateGas(transactionConfig, (error: Error, gas: number) => {
-                //console.log("sengSigned gas: " + gas)  //21000
-                if (callback !== undefined && error !== undefined) {
-                    callback(error, undefined);
-                }
+        // get gas price
+
+        var transactionConfigOrError: TransactionConfig | Error = await this.getGasPriceIfNeeded(transactionConfig, (error?: Error, gasPrice?: string) => {
+            if (callback !== undefined && error !== undefined) {
+                callback(error);
                 return;
-            });
+            }
+            if (callback === undefined && error !== undefined) {
+                throw error;
+            }
+        });
 
-            transactionConfig.gas = gas;
-            console.log("sendSigned transaction.gas: " + transactionConfig.gas);
-            console.log("sendSigned transaction.gasPrice: " + transactionConfig.gasPrice);
+        if (this.isTransactionConfig(transactionConfigOrError)) {
+            transactionConfig = transactionConfigOrError;
+        }
 
+        // estimate gas
+
+        var transactionConfigOrError: TransactionConfig | Error = await this.estimateGasIfNeeded(transactionConfig, (error?: Error, gas?: number) => {
+            if (callback !== undefined && error !== undefined) {
+                //callback(error, undefined);
+                callback(error);
+                return;
+            }
+            if (callback === undefined && error !== undefined) {
+                throw error;
+            }
+        });
+
+        if (this.isTransactionConfig(transactionConfigOrError)) {
+            transactionConfig = transactionConfigOrError;
+        }
+
+        console.log("sendSigned transaction.gasPrice: " + transactionConfig.gasPrice);
+        console.log("sendSigned transaction.gas: " + transactionConfig.gas);
+
+        try {
             //const pk: string = this._account.privateKey
             var signedTransaction: SignedTransaction = await this.eth.accounts.signTransaction(transactionConfig, this._account.privateKey);
 
@@ -350,22 +449,25 @@ export class Web3Session extends Web3 {
                 if (callback !== undefined) {
                     callback(Error("raw transaction is null or undefined"), undefined);
                 }
-                return;
+                return Error("raw transaction is null or undefined");
             }
 
             receipt = await this.eth.sendSignedTransaction(signedTransaction.rawTransaction, (error: Error, hash: string) => {
                 console.log("hash: " + hash)
                 if (callback !== undefined && error !== undefined) {
-                    callback(error, undefined);
+                    //callback(error, undefined);
+                    callback(error);
                 }
-                return;
+                return error;
             })
         } catch (error) {
             if (!callback) {
                 throw error;
+                //return Promise.reject(error);
             }
-            callback(error, undefined);
-            return;
+            //callback(error, undefined);
+            callback(error);
+            return error;
         }
 
         if (callback) {

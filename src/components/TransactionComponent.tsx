@@ -73,7 +73,7 @@ export class TransactionComponent extends React.Component<Props, State> {
 
         var transactionError: any | undefined = undefined;
 
-        promise.then((receipt: TransactionReceipt | undefined) => {
+        promise.then((receipt: TransactionReceipt | Error) => {
             console.log("receipt: " + receipt);
         }).catch((reason: any) => {
             console.log("error");

@@ -108,15 +108,19 @@ export class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
          * https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1193.md
          */
 
-        if (web3Manager.currentProvider == null && this.state.address == "") {
+        if ((web3Manager.currentProvider === null || web3Manager.currentProvider === undefined)
+            && this.state.address === "") {
             if ((window as any).ethereum) {
-              web3Manager.setProvider((window as any).ethereum);
-              (window as any).ethereum.enable();
-              console.log("Enabled Metamask Provider");
+                // use MetaMask as provider
+                web3Manager.setProvider((window as any).ethereum);
+                (window as any).ethereum.enable();
+                console.log("window.ethereum.enable()");
+                console.log("Enabled window.ethereum");
             } else if ((window as any).web3) {
-              // Use Mist/MetaMask's provider.
-              web3Manager.setProvider((window as any).web3);
-              console.log('Injected web3 detected.');
+                // use Mist as provider
+                web3Manager.setProvider((window as any).web3);
+                console.log("web3.setProvider(window.web3)");
+                console.log('Set injected web3 as provider');
             }
 
             return;
