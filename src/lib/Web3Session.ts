@@ -459,7 +459,7 @@ export class Web3Session extends Web3 {
                     callback(error);
                 }
                 return error;
-            })
+            });
         } catch (error) {
             if (!callback) {
                 throw error;
