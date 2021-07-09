@@ -3,7 +3,7 @@ import { Contract, ContractOptions, ContractSendMethod, SendOptions, DeployOptio
 import { Personal } from 'web3-eth-personal';
 import { Accounts } from 'web3-eth-accounts';
 import { Providers, provider, HttpProvider, WebsocketProvider, IpcProvider, SignedTransaction, TransactionReceipt, RLPEncodedTransaction, BlockNumber } from 'web3-core';
-import { TransactionConfig, BlockTransactionString } from 'web3-eth';
+import { TransactionConfig, BlockTransactionString, BlockTransactionObject } from 'web3-eth';
 import { Account } from './interfaces/account';
 import { AccountDelegate } from './interfaces/AccountDelegate';
 import { Transaction } from '../models/transaction';
@@ -304,7 +304,7 @@ export class Web3Session extends Web3 {
 
     /**
      * Gets and sets the gas price for a transaction config.
-     * Called by sendSigned(transactionConfig, callback)
+     * Called by sendSigned(transactionConfig, callback).
      * @param transactionConfig
      * @param callback
      * @returns Promise<TransactionConfig | Error>
@@ -317,12 +317,12 @@ export class Web3Session extends Web3 {
         var gasPrice: string;
         try {
             gasPrice = await this.eth.getGasPrice((error: Error, gasPrice: string) => {
-                if (callback !== undefined && error !== undefined) {
-                    callback(error);
-                    return error;
-                }
                 if (callback === undefined && error !== undefined) {
                     throw error;
+                }
+                if (callback !== undefined && error !== undefined) {
+                    callback(error);
+                    return;
                 }
             });
         } catch (error) {
@@ -341,7 +341,7 @@ export class Web3Session extends Web3 {
 
     /**
      * Estimates the gas for a transaction config.
-     * Called by sendSigned(transactionConfig, callback)
+     * Called by sendSigned(transactionConfig, callback).
      * @param transactionConfig
      * @param callback
      * @returns Promise<TransactionConfig | Error>
@@ -356,12 +356,12 @@ export class Web3Session extends Web3 {
             //gas = await this.estimateGas(signedTransaction);
             gas = await this.eth.estimateGas(transactionConfig, (error: Error, gas: number) => {
                 //console.log("sengSigned gas: " + gas)  //21000
-                if (callback !== undefined && error !== undefined) {
-                    callback(error, undefined);
-                    return error;
-                }
                 if (callback === undefined && error !== undefined) {
                     throw error;
+                }
+                if (callback !== undefined && error !== undefined) {
+                    callback(error, undefined);
+                    return;
                 }
             });
         } catch (error) {
@@ -380,10 +380,10 @@ export class Web3Session extends Web3 {
 
     /**
      * sendSigned() is based on eth_accounts
-     * and uses the private key set in this._account.privateKey
+     * and uses the private key set in this._account.privateKey.
      * @param transactionConfig
      * @param callback
-     * @returns Promise<TransactionReceipt | undefined>
+     * @returns Promise<TransactionReceipt | Error>
      */
     public async sendSigned(transactionConfig: TransactionConfig, callback?: (error?: Error, receipt?: TransactionReceipt) => void): Promise<TransactionReceipt | Error> {
         var gas: number = 0;
@@ -408,35 +408,38 @@ export class Web3Session extends Web3 {
         // get gas price
 
         var transactionConfigOrError: TransactionConfig | Error = await this.getGasPriceIfNeeded(transactionConfig, (error?: Error, gasPrice?: string) => {
-            if (callback !== undefined && error !== undefined) {
-                callback(error);
-                return;
-            }
             if (callback === undefined && error !== undefined) {
                 throw error;
             }
+            if (callback !== undefined && error !== undefined) {
+                callback(error);
+                return error;
+            }
         });
-
+        /*
         if (this.isTransactionConfig(transactionConfigOrError)) {
+            console.log(transactionConfigOrError);
             transactionConfig = transactionConfigOrError;
-        }
+        } */
 
         // estimate gas
 
         var transactionConfigOrError: TransactionConfig | Error = await this.estimateGasIfNeeded(transactionConfig, (error?: Error, gas?: number) => {
-            if (callback !== undefined && error !== undefined) {
-                //callback(error, undefined);
-                callback(error);
-                return;
-            }
             if (callback === undefined && error !== undefined) {
                 throw error;
             }
+            if (callback !== undefined && error !== undefined) {
+                //callback(error, undefined);
+                callback(error);
+                return error;
+            }
         });
 
-        if (this.isTransactionConfig(transactionConfigOrError)) {
-            transactionConfig = transactionConfigOrError;
+        if (!(this.isTransactionConfig(transactionConfigOrError))) {
+            return transactionConfigOrError;
         }
+
+        transactionConfig = transactionConfigOrError;
 
         console.log("sendSigned transaction.gasPrice: " + transactionConfig.gasPrice);
         console.log("sendSigned transaction.gas: " + transactionConfig.gas);
@@ -445,7 +448,7 @@ export class Web3Session extends Web3 {
             //const pk: string = this._account.privateKey
             var signedTransaction: SignedTransaction = await this.eth.accounts.signTransaction(transactionConfig, this._account.privateKey);
 
-            if (signedTransaction.rawTransaction == null || signedTransaction.rawTransaction === undefined) {
+            if (signedTransaction.rawTransaction === null || signedTransaction.rawTransaction === undefined) {
                 if (callback !== undefined) {
                     callback(Error("raw transaction is null or undefined"), undefined);
                 }
@@ -478,8 +481,8 @@ export class Web3Session extends Web3 {
     }
 
     /**
-     * sendSignedTransaction() is based on personal_signTransaction
-     * not supported by Ganache
+     * sendSignedTransaction() is based on personal_signTransaction.
+     * Not supported by Ganache.
      * @param transactionConfig
      * @param password
      * @param callback
@@ -529,22 +532,76 @@ export class Web3Session extends Web3 {
         return transactionReceipt;
     }
 
-    public async getLatestBlocks(blockCount: number) {
+    /**
+     * Returns the average gas limit for the latest blocks
+     * in a specified number.
+     * @param blockCount
+     * @returns Promise<number>
+     */
+    public async getLatestAverageGasLimit(blockCount: number): Promise<number> {
         const latestBlockNumber: number = await this.eth.getBlockNumber();
-        const batchRequest = new this.eth.BatchRequest();
+        //const batchRequest = new this.eth.BatchRequest();
         var averageGasLimit: number = 0;
 
-        let blockNumbers = new Array(blockCount);
+        //let blockNumbers = new Array(blockCount);
         for (var i = latestBlockNumber - blockCount; i <= latestBlockNumber; i++) {
             /*
             batchRequest.add(
                 (this.eth.getBlock as any).request(i, function(){})
             ); */
-            var blockTransactionString: BlockTransactionString = await this.eth.getBlock(i);
-            averageGasLimit += blockTransactionString.gasLimit;
+            var block: BlockTransactionString = await this.eth.getBlock(i);
+            averageGasLimit += block.gasLimit;
         }
 
         averageGasLimit /= blockCount;
+        return averageGasLimit;
+    }
+
+    /**
+     * Gets the average gas price for the latest transactions
+     * in the given number of blocks.
+     * TODO: Median would prevent statistical outlier.
+     * @param blockCount
+     * @return Promise<number>
+     */
+    public async getLatestAverageGasPrice(blockCount: number): Promise<number> {
+        var latestBlockNumber: number = await this.eth.getBlockNumber();
+        var averageGasPrice: number = 0;
+        var transactionCount: number = 0;
+
+        var block: BlockTransactionString = await this.eth.getBlock(latestBlockNumber);
+        if (block.number === null) {
+            latestBlockNumber--;
+        }
+
+        //let blockNumbers = new Array(blockCount);
+        for (let i = latestBlockNumber - blockCount; i <= latestBlockNumber; i++) {
+            /*
+            var block: BlockTransactionString = await this.eth.getBlock(i);
+            //const txCount = block.transactions.length;
+            //console.log(block.transactions);
+            for (let txIndex = 0; txIndex < block.transactions.length; txIndex++) {
+                const txHash = block.transactions[txIndex];
+                const transaction = await this.eth.getTransaction(txHash);
+                //const transaction = await this.eth.getTransactionFromBlock(i, txIndex);
+                console.log(transaction);
+                const gasPrice = Number(transaction.gasPrice);
+                averageGasPrice += gasPrice;
+            } */
+
+            var blockObj: BlockTransactionObject = await this.eth.getBlock(i, true);
+            //console.log(blockObj.transactions);
+            for (let txIndex = 0; txIndex < blockObj.transactions.length; txIndex++) {
+                const transaction = blockObj.transactions[txIndex];
+                //console.log(transaction);
+                const gasPrice = Number(transaction.gasPrice);
+                averageGasPrice += gasPrice;
+            }
+
+            transactionCount += block.transactions.length;
+        }
+
+        return averageGasPrice /= transactionCount;
     }
 
     public async call(transaction: any, callback?: (error?: Error, receipt?: Object) => void): Promise<any> {

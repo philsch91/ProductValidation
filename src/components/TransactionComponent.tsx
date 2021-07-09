@@ -47,7 +47,7 @@ export class TransactionComponent extends React.Component<Props, State> {
 
         const web3Manager = Web3NodeManager.getInstance();
         
-        if (web3Manager.eth.defaultAccount != undefined) {
+        if (web3Manager.eth.defaultAccount !== null) {
             transaction.from = web3Manager.eth.defaultAccount;
             console.log(transaction);
         }
@@ -100,6 +100,12 @@ export class TransactionComponent extends React.Component<Props, State> {
     };
 
     private handleTransactionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const web3Manager = Web3NodeManager.getInstance();
+        const averageGasPricePromise = web3Manager.getLatestAverageGasPrice(10);
+        averageGasPricePromise.then((value: number) => {
+            console.log("average gas price: " + value);
+        });
+
         this.setState({
             newTransaction: {
                 ...this.state.newTransaction,
