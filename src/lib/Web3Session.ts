@@ -564,7 +564,7 @@ export class Web3Session extends Web3 {
      * @param blockCount
      * @return Promise<number>
      */
-    public async getLatestAverageGasPrice(blockCount: number): Promise<number> {
+    public async getLatestAverageGasPriceAsync(blockCount: number): Promise<number> {
         var latestBlockNumber: number = await this.eth.getBlockNumber();
         var averageGasPrice: number = 0;
         var transactionCount: number = 0;
@@ -575,21 +575,21 @@ export class Web3Session extends Web3 {
         }
 
         //let blockNumbers = new Array(blockCount);
-        for (let i = latestBlockNumber - blockCount; i <= latestBlockNumber; i++) {
+        for (let blockNumber = latestBlockNumber - blockCount + 1; blockNumber <= latestBlockNumber; blockNumber++) {
             /*
-            var block: BlockTransactionString = await this.eth.getBlock(i);
+            var block: BlockTransactionString = await this.eth.getBlock(blockNumber);
             //const txCount = block.transactions.length;
             //console.log(block.transactions);
             for (let txIndex = 0; txIndex < block.transactions.length; txIndex++) {
                 const txHash = block.transactions[txIndex];
                 const transaction = await this.eth.getTransaction(txHash);
-                //const transaction = await this.eth.getTransactionFromBlock(i, txIndex);
+                //const transaction = await this.eth.getTransactionFromBlock(blockNumber, txIndex);
                 console.log(transaction);
                 const gasPrice = Number(transaction.gasPrice);
                 averageGasPrice += gasPrice;
             } */
 
-            var blockObj: BlockTransactionObject = await this.eth.getBlock(i, true);
+            var blockObj: BlockTransactionObject = await this.eth.getBlock(blockNumber, true);
             //console.log(blockObj.transactions);
             for (let txIndex = 0; txIndex < blockObj.transactions.length; txIndex++) {
                 const transaction = blockObj.transactions[txIndex];
@@ -598,10 +598,97 @@ export class Web3Session extends Web3 {
                 averageGasPrice += gasPrice;
             }
 
-            transactionCount += block.transactions.length;
+            transactionCount += blockObj.transactions.length;
         }
 
+        console.log("transaction count: " + transactionCount);
+
         return averageGasPrice /= transactionCount;
+    }
+
+    public getLatestAverageGasPrice(blockCount: number, callback: (error?: Error, gasPrice?: number) => void) {
+        var averageGasPrice: number = 0;
+        var transactionCount: number = 0;
+
+        this.eth.getBlockNumber((error: Error, latestBlockNumber: number) => {
+            //if (error !== null && error !== undefined) {
+            if (error) {
+                callback(error);
+                return;
+            }
+            for (let blockNumber = latestBlockNumber - blockCount + 1; blockNumber <= latestBlockNumber; blockNumber++) {
+                this.eth.getBlock(blockNumber, true, (error: Error, block: BlockTransactionObject) => {
+                    //if (error !== null && error !== undefined) {}
+                    if (error) {
+                        callback(error);
+                        return;
+                    }
+                    for (let txIndex = 0; txIndex < block.transactions.length; txIndex++) {
+                        const transaction = block.transactions[txIndex];
+                        console.log(transaction);
+                        //console.log(transaction.gasPrice);
+                        const gasPrice = Number(transaction.gasPrice);
+                        //console.log(gasPrice);
+                        averageGasPrice += gasPrice;
+                    }
+
+                    transactionCount += block.transactions.length;
+                    //console.log(averageGasPrice);
+                    //console.log(transactionCount);
+                    if (blockNumber == latestBlockNumber) {
+                        console.log("transaction count: " + transactionCount);
+                        averageGasPrice /= transactionCount;
+                        callback(undefined, averageGasPrice);
+                    }
+                });
+            }
+        });
+    }
+
+    public getAverageGasPrice(blockCount: number, callback?: (error?: Error, gasPrice?: number) => void): Promise<number> {
+        const promise = new Promise((resolve: (value: any) => void, reject: (reason?: any) => void) => {
+            var averageGasPrice: number = 0;
+            var transactionCount: number = 0;
+
+            this.eth.getBlockNumber((error: Error, latestBlockNumber: number) => {
+                //if (error !== null && error !== undefined) {
+                if (error) {
+                    //callback(error);
+                    reject(error);
+                }
+                for (let blockNumber = latestBlockNumber - blockCount + 1; blockNumber <= latestBlockNumber; blockNumber++) {
+                    this.eth.getBlock(blockNumber, true, (error: Error, block: BlockTransactionObject) => {
+                        //if (error !== null && error !== undefined) {}
+                        if (error) {
+                            //callback(error);
+                            reject(error);
+                        }
+                        for (let txIndex = 0; txIndex < block.transactions.length; txIndex++) {
+                            const transaction = block.transactions[txIndex];
+                            //console.log(transaction);
+                            const gasPrice = Number(transaction.gasPrice);
+                            averageGasPrice += gasPrice;
+                        }
+                        transactionCount += block.transactions.length;
+                        if (blockNumber == latestBlockNumber) {
+                            console.log("transaction count: " + transactionCount);
+                            averageGasPrice /= transactionCount;
+                            resolve(averageGasPrice);
+                        }
+                    });
+                }
+                //averageGasPrice /= transactionCount;
+                ////callback(undefined, averageGasPrice);
+                //resolve(averageGasPrice);
+            });
+        });
+
+        if (callback) {
+            //promise.then(callback.bind(null, null), callback);
+            promise.then(callback.bind(undefined, undefined), callback);
+        }
+
+        return promise;
     }
 
     public async call(transaction: any, callback?: (error?: Error, receipt?: Object) => void): Promise<any> {

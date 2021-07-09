@@ -101,9 +101,18 @@ export class TransactionComponent extends React.Component<Props, State> {
 
     private handleTransactionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const web3Manager = Web3NodeManager.getInstance();
-        const averageGasPricePromise = web3Manager.getLatestAverageGasPrice(10);
+        /*
+        const averageGasPricePromise = web3Manager.getLatestAverageGasPriceAsync(10);
         averageGasPricePromise.then((value: number) => {
             console.log("average gas price: " + value);
+        }); */
+
+        web3Manager.getLatestAverageGasPrice(10, (error?: Error, gasPrice?: number) => {
+            if (error) {
+                console.log("error: " + error);
+                return;
+            }
+            console.log("average gas price: " + gasPrice);
         });
 
         this.setState({
