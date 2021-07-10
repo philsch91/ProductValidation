@@ -569,8 +569,8 @@ export class Web3Session extends Web3 {
         var averageGasPrice: number = 0;
         var transactionCount: number = 0;
 
-        var block: BlockTransactionString = await this.eth.getBlock(latestBlockNumber);
-        if (block.number === null) {
+        var latestBlock: BlockTransactionString = await this.eth.getBlock(latestBlockNumber);
+        if (latestBlock.number === null) {
             latestBlockNumber--;
         }
 
@@ -589,16 +589,16 @@ export class Web3Session extends Web3 {
                 averageGasPrice += gasPrice;
             } */
 
-            var blockObj: BlockTransactionObject = await this.eth.getBlock(blockNumber, true);
+            var block: BlockTransactionObject = await this.eth.getBlock(blockNumber, true);
             //console.log(blockObj.transactions);
-            for (let txIndex = 0; txIndex < blockObj.transactions.length; txIndex++) {
-                const transaction = blockObj.transactions[txIndex];
+            for (let txIndex = 0; txIndex < block.transactions.length; txIndex++) {
+                const transaction = block.transactions[txIndex];
                 //console.log(transaction);
                 const gasPrice = Number(transaction.gasPrice);
                 averageGasPrice += gasPrice;
             }
 
-            transactionCount += blockObj.transactions.length;
+            transactionCount += block.transactions.length;
         }
 
         console.log("transaction count: " + transactionCount);
@@ -616,32 +616,42 @@ export class Web3Session extends Web3 {
                 callback(error);
                 return;
             }
-            for (let blockNumber = latestBlockNumber - blockCount + 1; blockNumber <= latestBlockNumber; blockNumber++) {
-                this.eth.getBlock(blockNumber, true, (error: Error, block: BlockTransactionObject) => {
-                    //if (error !== null && error !== undefined) {}
-                    if (error) {
-                        callback(error);
-                        return;
-                    }
-                    for (let txIndex = 0; txIndex < block.transactions.length; txIndex++) {
-                        const transaction = block.transactions[txIndex];
-                        console.log(transaction);
-                        //console.log(transaction.gasPrice);
-                        const gasPrice = Number(transaction.gasPrice);
-                        //console.log(gasPrice);
-                        averageGasPrice += gasPrice;
-                    }
+            this.eth.getBlock(latestBlockNumber, (error: Error, latestBlock: BlockTransactionString) => {
+                if (error) {
+                    callback(error);
+                    return;
+                }
 
-                    transactionCount += block.transactions.length;
-                    //console.log(averageGasPrice);
-                    //console.log(transactionCount);
-                    if (blockNumber == latestBlockNumber) {
-                        console.log("transaction count: " + transactionCount);
-                        averageGasPrice /= transactionCount;
-                        callback(undefined, averageGasPrice);
-                    }
-                });
-            }
+                if (latestBlock.number === null) {
+                    latestBlockNumber--;
+                }
+
+                for (let blockNumber = latestBlockNumber - blockCount + 1; blockNumber <= latestBlockNumber; blockNumber++) {
+                    this.eth.getBlock(blockNumber, true, (error: Error, block: BlockTransactionObject) => {
+                        //if (error !== null && error !== undefined) {}
+                        if (error) {
+                            callback(error);
+                            return;
+                        }
+                        for (let txIndex = 0; txIndex < block.transactions.length; txIndex++) {
+                            const transaction = block.transactions[txIndex];
+                            console.log(transaction);
+                            //console.log(transaction.gasPrice);
+                            const gasPrice = Number(transaction.gasPrice);
+                            //console.log(gasPrice);
+                            averageGasPrice += gasPrice;
+                        }
+                        transactionCount += block.transactions.length;
+                        //console.log(averageGasPrice);
+                        //console.log(transactionCount);
+                        if (blockNumber == latestBlockNumber) {
+                            console.log("transaction count: " + transactionCount);
+                            averageGasPrice /= transactionCount;
+                            callback(undefined, averageGasPrice);
+                        }
+                    });
+                }
+            });
         });
     }
 
