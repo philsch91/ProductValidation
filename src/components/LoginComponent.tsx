@@ -81,6 +81,12 @@ export class LoginComponent extends React.Component<Props, LoginComponentState> 
     private onClickPrivateKey = (event: React.MouseEvent<HTMLInputElement, MouseEvent>) => {
         console.log("LoginComponent.onSubmitPrivateKey");
         //console.log(this.state.account?.privateKey);
+        // if LoginComponent.onClickReadAccounts() is not called and LoginComponents.accounts is not set
+        const web3Manager = Web3NodeManager.getInstance();
+        if (web3Manager.account !== undefined) {
+            this.onChangeAccount(web3Manager.account);
+        }
+
         if (this.state.account == null) {
             return;
         }

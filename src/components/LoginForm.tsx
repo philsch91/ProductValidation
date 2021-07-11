@@ -1,5 +1,6 @@
 import React from 'react';
 import Web3 from 'web3';
+import { Accounts } from 'web3-eth-accounts';
 
 import { Web3NodeManager } from '../helpers/Web3NodeManager';
 import { Account } from '../lib/interfaces/account';
@@ -87,6 +88,13 @@ export class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
      */
     private onClickPrivateKey = (event: React.MouseEvent<HTMLInputElement, MouseEvent>) => {
         if (this.props.account == null) {
+            //return;
+            // if LoginComponent.onClickReadAccounts() is not called and LoginComponents.accounts is not set
+            const web3Manager = Web3NodeManager.getInstance();
+            let ethAccount: any = web3Manager.eth.accounts.privateKeyToAccount(this.state.privateKey);
+            let account = { address: ethAccount.address, privateKey: ethAccount.privateKey } as Account;
+            web3Manager.account = account;
+            this.props.onClickPrivateKey(event);
             return;
         }
         this.props.account.privateKey = this.state.privateKey;
@@ -128,7 +136,13 @@ export class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
 
         console.log(this.state.address);
         //const provider = new Web3.providers.HttpProvider('http://127.0.0.1:7545');
-        const provider = new Web3.providers.WebsocketProvider('ws://' + this.state.address);
+        let provider = null;
+        if (this.state.address.startsWith("http://")) {
+            provider = new Web3.providers.HttpProvider(this.state.address);
+        } else if (this.state.address.startsWith('ws://')) {
+            provider = new Web3.providers.WebsocketProvider(this.state.address);
+        }
+
         web3Manager.setProvider(provider);
 
         // if no provider could be set
@@ -148,6 +162,10 @@ export class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
         const web3Manager = Web3NodeManager.getInstance();
 
         web3Manager.eth.getAccounts((error: Error, accounts: string[]) => {
+            if (error !== null) {
+                console.log(error);
+                return;
+            }
             var accountList: Account[] = new Array(accounts.length)
             var i = 0
             for(let key in accounts){
