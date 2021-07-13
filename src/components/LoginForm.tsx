@@ -137,7 +137,7 @@ export class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
         console.log(this.state.address);
         //const provider = new Web3.providers.HttpProvider('http://127.0.0.1:7545');
         let provider = null;
-        if (this.state.address.startsWith("http://")) {
+        if (this.state.address.startsWith("http://") || this.state.address.startsWith("https://")) {
             provider = new Web3.providers.HttpProvider(this.state.address);
         } else if (this.state.address.startsWith('ws://')) {
             provider = new Web3.providers.WebsocketProvider(this.state.address);
