@@ -454,7 +454,11 @@ export class Web3Session extends Web3 {
                 }
                 return Error("raw transaction is null or undefined");
             }
-
+            const date: Date = new Date();
+            var dateISOString: string = date.toISOString();
+            console.log("date ISO string: " + dateISOString);
+            var dateUTCString: string = date.toUTCString();
+            console.log("date UTC string: " + dateUTCString);
             receipt = await this.eth.sendSignedTransaction(signedTransaction.rawTransaction, (error: Error, hash: string) => {
                 console.log("hash: " + hash)
                 if (callback !== undefined && error !== undefined) {
@@ -574,6 +578,7 @@ export class Web3Session extends Web3 {
             latestBlockNumber--;
         }
 
+        console.log("latest block number: " + latestBlockNumber);
         //let blockNumbers = new Array(blockCount);
         for (let blockNumber = latestBlockNumber - blockCount + 1; blockNumber <= latestBlockNumber; blockNumber++) {
             /*
@@ -616,6 +621,7 @@ export class Web3Session extends Web3 {
                 callback(error);
                 return;
             }
+            console.log("latest block number: " + latestBlockNumber);
             this.eth.getBlock(latestBlockNumber, (error: Error, latestBlock: BlockTransactionString) => {
                 if (error) {
                     callback(error);

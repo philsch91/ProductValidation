@@ -29,7 +29,7 @@ export class TransactionComponent extends React.Component<Props, State> {
 
     constructor(props: Props){
         super(props);
-        this.state={
+        this.state = {
             newTransaction: {
                 id: 0
                 //from: "",
@@ -100,12 +100,12 @@ export class TransactionComponent extends React.Component<Props, State> {
     };
 
     private handleTransactionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const web3Manager = Web3NodeManager.getInstance();
         /*
+        const web3Manager = Web3NodeManager.getInstance();
         const averageGasPricePromise = web3Manager.getLatestAverageGasPriceAsync(10);
         averageGasPricePromise.then((value: number) => {
             console.log("average gas price: " + value);
-        }); */
+        });
 
         web3Manager.getLatestAverageGasPrice(10, (error?: Error, gasPrice?: number) => {
             if (error) {
@@ -114,6 +114,7 @@ export class TransactionComponent extends React.Component<Props, State> {
             }
             console.log("average gas price: " + gasPrice);
         });
+        */
 
         this.setState({
             newTransaction: {
@@ -141,6 +142,15 @@ export class TransactionComponent extends React.Component<Props, State> {
         });
     };
 
+    private handleChangeTransactionGasPrice = (event: React.ChangeEvent<HTMLInputElement>) => {
+        this.setState({
+            newTransaction: {
+                ...this.state.newTransaction,
+                gasPrice: event.target.value
+            }
+        });
+    };
+
     private deleteTransaction = (transactionToDelete: Transaction) => {
         this.setState(previousState => ({
             transactions: [
@@ -159,6 +169,7 @@ export class TransactionComponent extends React.Component<Props, State> {
                     onChange={this.handleTransactionChange}
                     onChangeTo={this.handleTransactionChangeTo}
                     onChangeValue={this.handleTransactionChangeValue}
+                    onChangeGasPrice={this.handleChangeTransactionGasPrice}
                     onAdd={this.addTransaction}
                 />
                 <TransactionList transactions={this.state.transactions} onDelete={this.deleteTransaction} />
