@@ -17,3 +17,14 @@ contract.abi = abi;
 
 let strContract = JSON.stringify(contract);
 fs.writeFileSync('ProductContract.json',strContract);
+
+const strSaleBin = fs.readFileSync('contracts/ProductSale_sol_ProductSale.bin','utf8');
+const strSaleAbi = fs.readFileSync('contracts/ProductSale_sol_ProductSale.abi','utf8');
+let saleAbi = JSON.parse(strSaleAbi);
+
+var productSaleContract = {};
+productSaleContract.bin = strSaleBin;
+productSaleContract.abi = saleAbi;
+
+let strProductSaleContract = JSON.stringify(productSaleContract);
+fs.writeFileSync('ProductSaleContract.json',strProductSaleContract);

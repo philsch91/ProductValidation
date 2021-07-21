@@ -95,9 +95,9 @@ contract ProductSale {
         _;
     }
 
-    // The smart contract's constructor
+    // The smart contract constructor
     constructor() public payable {
-        // The seller is the contract's owner
+        // The seller is the contract owner
         owner = msg.sender;
 
         // casting from address payable to address
@@ -159,12 +159,12 @@ contract ProductSale {
     }
 
     // The function to send purchase orders
+    // Payable functions returns the transaction object, with no custom field
+    // To get field values listen to OrderSent event
     // requires fee
-    // Payable functions returns just the transaction object, with no custom field.
-    // To get field values listen to OrderSent event.
     //function sendOrder(string memory productName, uint quantity) public payable {
     function sendOrder(string memory productName, uint quantity) public payable {
-        // Accept orders just from buyer
+        // Accept orders only from buyer
         //require(msg.sender == buyerAddr);
 
         // Instantiate product
@@ -215,10 +215,10 @@ contract ProductSale {
     }
 
     // The function to send the price to pay for order
-    // Just the owner can call this function
+    // Only the owner should call this function
     // requires fee
     function sendPrice(uint orderno, uint price, int8 ttype) public payable {
-        // Only the owner can use this function
+        // Only the owner should use this function
         require(msg.sender == owner);
 
         // Validate the order number
@@ -243,18 +243,18 @@ contract ProductSale {
         emit PriceSent(orders[orderno].buyer, orderno, price, ttype);
     }
 
-    // The function to send the value of order's price
+    // The function to send the value of order price
     // This value will be blocked until the delivery of order
     // requires fee
     function sendSafepay(uint orderno) public payable {
         // Validate the order number
         require(orders[orderno].init);
 
-        // Just the buyer can make safepay
+        // Only the buyer should send payment
         //require(buyerAddr == msg.sender);
         require(orders[orderno].buyer == msg.sender);
 
-        // The order's value plus the shipment value must equal to msg.value
+        // The order value plus the shipment value must equal to msg.value
         require((orders[orderno].price + orders[orderno].shipment.price) == msg.value);
 
         orders[orderno].safepay = msg.value;
@@ -268,7 +268,7 @@ contract ProductSale {
         // Validate the order number
         require(orders[orderno].init);
 
-        // Just the seller can send the invoice
+        // Only the seller should send the invoice
         require(owner == msg.sender);
 
         // Buyer must be set
@@ -316,26 +316,30 @@ contract ProductSale {
         Invoice storage _invoice = invoices[invoiceno];
         Order storage _order = orders[_invoice.orderno];
 
-        // Just the courier can call this function
+        // Only the courier should call this function
         require(_order.shipment.courier == msg.sender);
 
         emit OrderDelivered(_order.buyer, invoiceno, _order.number, timestamp, _order.shipment.courier);
 
         // Payout the Order to the seller
         //owner.transfer(_order.safepay);
+
         //Solidity 0.6
         address payable sellerAddress = payable(owner);
         //Solidity 0.5
         //address payable sellerAddress = address(uint160(owner));
-        sellerAddress.transfer(_order.safepay);
+        //sellerAddress.transfer(_order.safepay);
+        sellerAddress.transfer(_order.price);
 
         // Payout the Shipment to the courier
         //_order.shipment.courier.transfer(_order.shipment.safepay);
+
         //Solidity 0.6
         address payable courierAddress = payable(_order.shipment.courier);
         //Solidity 0.5
         //address payable courierAddress = address(uint160(_order.shipment.courier));
-        courierAddress.transfer(_order.shipment.safepay);
+        //courierAddress.transfer(_order.shipment.safepay);
+        courierAddress.transfer(_order.shipment.price);
 
         _order.product.productOwnerName = _order.buyer;
         if (productValidationContractAddress == address(0)) {
