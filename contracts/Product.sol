@@ -12,7 +12,7 @@ contract Product {
 
     event ReturnValue(string productOwnerName, string productName, uint creationDate);
     // Event triggered for completed order, delivery and transfer of ownership
-    event OwnershipTransferred(string productOwnerName, uint productId);
+    event OwnershipTransferred(string indexed indexedProductOwnerName, uint indexed productId, string productOwnerName);
 
     struct ProductInformation {
         string productOwnerName;
@@ -38,10 +38,12 @@ contract Product {
         startTime = block.timestamp;
         productId = 0;
 
+        // Solidity 0.6
         // casting from address payable to address
         //address payable _addr = msg.sender;
         //address addr = address(_addr);
 
+        // Solidity 0.5
         // casting from address to address payable
         //address _addr = msg.sender;
         //address payable addr = address(uint160(_addr));
@@ -75,8 +77,8 @@ contract Product {
         productInfoList.push(productId + 1);
         productId = productId + 1;
 
-        // Trigger the event OwnershipTransfered
-        emit OwnershipTransferred(_productOwnerName, productId);
+        // Trigger the event OwnershipTransferred
+        emit OwnershipTransferred(_productOwnerName, productId, _productOwnerName);
     }
 
     function getAllProductIds() public view onlyOwner returns (uint256[] memory){
