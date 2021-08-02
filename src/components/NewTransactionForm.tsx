@@ -52,7 +52,8 @@ export class NewTransactionForm extends React.Component<Props, State> {
                 return;
             }
             console.log("average gas price: " + gasPrice);
-            this.state.transaction.gasPrice = gasPrice;
+            //this.state.transaction.gasPrice = gasPrice;
+            this.props.transaction.gasPrice = gasPrice;
         });
     }
 
@@ -66,7 +67,8 @@ export class NewTransactionForm extends React.Component<Props, State> {
             <p>Textnote:</p>
             <input onChange={this.props.onChange} value={"" + this.props.transaction.name} />
             <p>Gas Price:</p>
-            <input onChange={this.props.onChangeGasPrice} value={"" + this.state.transaction.gasPrice} />
+            {/* <input onChange={this.props.onChangeGasPrice} defaultValue={"" + this.state.transaction.gasPrice} /> */}
+            <input onChange={this.props.onChangeGasPrice} value={"" + this.props.transaction.gasPrice} />
             <input type="button" onClick={this.onClickCalculateGasPrice} value="Get Average Gas Price" />
             <button type="submit">Send transaction</button>
             </form>
