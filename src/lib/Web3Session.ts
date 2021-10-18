@@ -61,7 +61,7 @@ export class Web3Session extends Web3 {
             addresses = await this.getAccounts();
         } catch (error) {
             //callback(error, accountList);
-            callback(error);
+            callback(error as Error);
             return;
         }
         
@@ -202,7 +202,7 @@ export class Web3Session extends Web3 {
                 gas = await object.estimateGas(estimateGasOptions);
             }
         } catch (error) {
-            if (!callback) {
+            if (!callback || !(error instanceof Error)) {
                 throw error;
             }
             callback(error);
@@ -253,7 +253,7 @@ export class Web3Session extends Web3 {
               });
         } catch (error) {
             console.log("catch");
-            if (!callback) {
+            if (!callback || !(error instanceof Error)) {
                 throw error;
             }
             callback(error);
@@ -288,7 +288,7 @@ export class Web3Session extends Web3 {
                 return;
             })
         } catch (error) {
-            if (!callback) {
+            if (!callback || !(error instanceof Error)) {
                 throw error;
             }
             callback(error, undefined);
@@ -326,7 +326,7 @@ export class Web3Session extends Web3 {
                 }
             });
         } catch (error) {
-            if (!callback) {
+            if (!callback || !(error instanceof Error)) {
                 throw error;
                 //return Promise.reject(error);
             }
@@ -365,7 +365,7 @@ export class Web3Session extends Web3 {
                 }
             });
         } catch (error) {
-            if (!callback) {
+            if (!callback || !(error instanceof Error)) {
                 throw error;
                 //return Promise.reject(error);
             }
@@ -468,7 +468,7 @@ export class Web3Session extends Web3 {
                 return error;
             });
         } catch (error) {
-            if (!callback) {
+            if (!callback || !(error instanceof Error)) {
                 throw error;
                 //return Promise.reject(error);
             }
@@ -523,7 +523,7 @@ export class Web3Session extends Web3 {
                 return;
             })
         } catch (error) {
-            if (!callback) {
+            if (!callback || !(error instanceof Error)) {
                 throw error;
             }
             callback(error);
@@ -716,7 +716,7 @@ export class Web3Session extends Web3 {
             gas = await this.estimateGas(transaction);
             receipt = await transaction.call({from: this.eth.defaultAccount, gas: gas});
         } catch (error) {
-            if (!callback) {
+            if (!callback || !(error instanceof Error)) {
                 throw error;
             }
             callback(error);
