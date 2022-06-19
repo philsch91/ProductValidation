@@ -220,7 +220,15 @@ export class Web3Session extends Web3 {
         return gas;
     }
 
-    public async deploy(contract: Contract, deployOptions: DeployOptions, sendOptions: SendOptions, callback?: (error?: Error, object?: Object, transactionHash?: String) => void): Promise<Contract|null> {
+    /**
+     * Deploys the given contract
+     * @param contract
+     * @param deployOptions
+     * @param sendOptions
+     * @param callback
+     * @returns Promise<Contract | Error>
+     */
+    public async deploy(contract: Contract, deployOptions: DeployOptions, sendOptions: SendOptions, callback?: (error?: Error, deployedContract?: Contract, transactionHash?: String) => void): Promise<Contract | Error> {
         var sendMethod: ContractSendMethod;
         var gas: Number = 0;
         var newContract: Contract;
@@ -254,45 +262,48 @@ export class Web3Session extends Web3 {
         } catch (error) {
             console.log("catch");
             if (!callback || !(error instanceof Error)) {
-                throw error;
+                throw error;    // implicitly returns Promise
+                //return Promise.reject(error); // explicitly returns Promise
             }
             callback(error);
-            return null;
+            return error;   // implicitly returns Promise
         }
         
         if (callback) {
             callback(undefined, newContract, transactionHash);
         }
-        
+
         return newContract;
     }
 
     /**
+     * Sends a transaction.
      * TODO: change gas to number
      * @param transaction
      * @param callback
+     * @returns Promise<TransactionReceipt | Error>
      */
-    public async send(transaction: TransactionConfig, callback?: (error?: Error, receipt?: Object) => void): Promise<any> {
+    public async send(transaction: TransactionConfig, callback?: (error?: Error, receipt?: Object) => void): Promise<TransactionReceipt | Error> {
         var gas: Number | Error = 0;
         var receipt: TransactionReceipt;
         
         try {
-            //gas = await transaction.estimateGas({from: this.eth.defaultAccount});
             gas = await this.estimateGas(transaction);
-            //receipt = await transaction.send({from: this.eth.defaultAccount, gas: gas});
             receipt = await this.eth.sendTransaction(transaction, (error: Error, hash: string) => {
                 console.log("hash: " + hash)
                 if (callback !== undefined && error !== undefined) {
                     callback(error, undefined);
                 }
                 return;
-            })
+            });
         } catch (error) {
             if (!callback || !(error instanceof Error)) {
-                throw error;
+                throw error;    // implicitly returns Promise
+                //return Promise.reject(error); // explicitly returns Promise
             }
-            callback(error, undefined);
-            return;
+            //callback(error, undefined);
+            callback(error);
+            return error;   // implicitly returns Promise
         }
         
         if (callback) {
@@ -379,6 +390,7 @@ export class Web3Session extends Web3 {
     }
 
     /**
+     * Signs and sends a transaction locally.
      * sendSigned() is based on eth_accounts
      * and uses the private key set in this._account.privateKey.
      * @param transactionConfig
@@ -391,7 +403,7 @@ export class Web3Session extends Web3 {
 
         if (transactionConfig.from === undefined && this.defaultAccount !== null) {
             //this.eth.defaultAccount
-            transactionConfig.from = this.defaultAccount
+            transactionConfig.from = this.defaultAccount;
         }
 
         if (transactionConfig.from === undefined && this._account !== undefined) {
@@ -402,7 +414,7 @@ export class Web3Session extends Web3 {
             if (callback !== undefined) {
                 callback(Error("private key not set"));
             }
-            return Error("private key not set");
+            return Error("private key not set");    // implicitly returns Promise
         }
 
         // get gas price
@@ -436,7 +448,7 @@ export class Web3Session extends Web3 {
         });
 
         if (!(this.isTransactionConfig(transactionConfigOrError))) {
-            return transactionConfigOrError;
+            return transactionConfigOrError;    // implicitly returns Promise
         }
 
         transactionConfig = transactionConfigOrError;
@@ -452,13 +464,15 @@ export class Web3Session extends Web3 {
                 if (callback !== undefined) {
                     callback(Error("raw transaction is null or undefined"), undefined);
                 }
-                return Error("raw transaction is null or undefined");
+                return Error("raw transaction is null or undefined");   // implicitly returns Promise
             }
+
             const date: Date = new Date();
             var dateISOString: string = date.toISOString();
             console.log("date ISO string: " + dateISOString);
             var dateUTCString: string = date.toUTCString();
             console.log("date UTC string: " + dateUTCString);
+
             receipt = await this.eth.sendSignedTransaction(signedTransaction.rawTransaction, (error: Error, hash: string) => {
                 console.log("hash: " + hash)
                 if (callback !== undefined && error !== undefined) {
@@ -469,12 +483,12 @@ export class Web3Session extends Web3 {
             });
         } catch (error) {
             if (!callback || !(error instanceof Error)) {
-                throw error;
-                //return Promise.reject(error);
+                throw error;    // implicitly returns Promise
+                //return Promise.reject(error); // explicitly returns Promise
             }
             //callback(error, undefined);
             callback(error);
-            return error;
+            return error;   // implicitly returns Promise
         }
 
         if (callback) {
@@ -485,14 +499,18 @@ export class Web3Session extends Web3 {
     }
 
     /**
+     * Signs and sends a transaction remotely
+     * via the management API of the Ethereum client.
+     * The respective accounts needs to be unlocked
+     * by calling web3.eth.personal.unlockAccount().
      * sendSignedTransaction() is based on personal_signTransaction.
      * Not supported by Ganache.
      * @param transactionConfig
      * @param password
      * @param callback
-     * @returns Promise<TransactionReceipt | undefined>
+     * @returns Promise<TransactionReceipt | Error>
      */
-    public async sendSignedTransaction(transactionConfig: TransactionConfig, password: string, callback?: (error?: Error, receipt?: TransactionReceipt) => void): Promise<TransactionReceipt | undefined> {
+    public async sendSignedTransaction(transactionConfig: TransactionConfig, password: string, callback?: (error?: Error, receipt?: TransactionReceipt) => void): Promise<TransactionReceipt | Error> {
         if (transactionConfig.from === undefined && this.defaultAccount !== null) {
             transactionConfig.from = this.defaultAccount
         }
@@ -521,13 +539,13 @@ export class Web3Session extends Web3 {
                     callback(error, undefined);
                 }
                 return;
-            })
+            });
         } catch (error) {
             if (!callback || !(error instanceof Error)) {
-                throw error;
+                throw error;    // implicitly returns Promise
             }
             callback(error);
-            return;
+            return error;   // implicitly returns Promise
         }
 
         if (callback) {

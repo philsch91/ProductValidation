@@ -85,8 +85,9 @@ export class DealComponent extends React.Component<DealComponentProps, DealCompo
 
         var promise = web3Manager.deploy(contract, deployOpts, sendOpts);
 
-        promise.then((newContract: Contract | null) => {
-            if (newContract == null) {
+        promise.then((newContract: Contract | Error) => {
+            if ((newContract instanceof Error)) {
+                console.log(newContract.message);
                 return;
             }
 

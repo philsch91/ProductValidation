@@ -9,7 +9,7 @@ import {TransactionComponent} from './components/TransactionComponent';
 import {ProductComponent} from './components/ProductComponent';
 import {DealComponent} from './components/DealComponent';
 import {ProductValidationComponent} from "./components/ProductValidationComponent";
-import { WalletDiv } from './components/WalletDiv';
+import {WalletDiv} from './components/WalletDiv';
 
 import {Transaction} from './models/transaction';
 import {Deal} from './models/deal';
@@ -24,6 +24,7 @@ import * as productContract from './static/ProductContract.json'
 import {OWNER_ADDRESS} from './static/constants'
 
 import './App.css';
+import { Console } from 'console';
 
 interface State {
     //account: string | null;
@@ -175,8 +176,9 @@ class AuthenticatedApp extends React.Component<{}, State, AccountDelegate> {
 
         var promise = web3Manager.deploy(contract, deployOpts, sendOpts);
 
-        promise.then((newContract: Contract | null) => {
-            if (newContract == null) {
+        promise.then((newContract: Contract | Error) => {
+            if ((newContract instanceof Error)) {
+                console.log(newContract.message);
                 return;
             }
 
