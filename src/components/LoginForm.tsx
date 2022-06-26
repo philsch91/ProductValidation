@@ -42,15 +42,8 @@ export class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
     private onChangeAddress(event: React.ChangeEvent<HTMLInputElement>) {
         event.preventDefault();
         console.log(event.target.value);
-        /**
-         * Method 1
-         */
-        this.setState({
-          address: event.target.value
-        });
 
         /**
-         * Method 2
          * not working with string
         this.setState({
             address: {
@@ -59,26 +52,45 @@ export class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
             }
         }); */
 
-        /*
-         * Method 3
-        this.setState(previousState => ({
+        /**
+         * Method 1
+         */
+        this.setState({
+            address: event.target.value
+        });
+
+        /**
+         * Method 2
+         * arrow function
+         * use only for access to previous state and current props
+        this.setState((previousState, currentProps) => ({
             address: event.target.value
         }));
+        */
+
+        /**
+         * Method 3
+         * regular function
+         * use only for access to previous state and current props
+        this.setState(function(previousState, currentProps) {
+            return {
+                address: event.target.value
+            };
+        });
         */
     };
 
     private onChangePrivateKey(event: React.ChangeEvent<HTMLInputElement>) {
         //event.preventDefault();
         //console.log(event.target.value);
+        /*
+        this.setState(previousState => ({
+            privateKey: event.target.value
+        }));
+        */
         this.setState({
             privateKey: event.target.value
         });
-        /*
-        this.setState(
-            previousState => ({
-                privateKey: event.target.value
-        }));
-        */
     }
 
     /**
@@ -109,7 +121,7 @@ export class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
 
         /**
          * Web3 assigns window.ethereum to Web3.givenProvider property
-         * if the provider is ERC1193 compliant (as MetaMask)
+         * if the provider is EIP-1193 (ERC-1193) compliant (like MetaMask).
          * web3.currentProvider is the provider that web3 was initialized with
          * web3.givenProvider is the provider injected by the environment (like window.ethereum)
          * https://stackoverflow.com/questions/55822581/what-is-the-difference-between-currentprovider-and-givenprovider-in-web3-js
@@ -131,6 +143,10 @@ export class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
                 console.log('Set injected web3 as provider');
             }
 
+            if (!web3Manager.currentProvider) {
+                alert("Please install an EIP-1193 compliant provider such as MetaMask to continue");
+            }
+
             return;
         }
 
@@ -147,7 +163,7 @@ export class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
 
         // if no provider could be set
         if (!web3Manager.currentProvider) {
-            //alert("Please install Metamask to continue!");
+            console.log("web3Manager.currentprovider === null");
             return;
         }
 
